@@ -1,15 +1,16 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Briefcase, 
-  ArrowUpDown, 
-  Users, 
-  BarChart3, 
-  FileText, 
+import {
+  LayoutDashboard,
+  Briefcase,
+  ArrowUpDown,
+  Users,
+  BarChart3,
+  FileText,
   Settings,
   TrendingUp,
-  Wallet
+  Wallet,
+  Shield
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -35,6 +36,7 @@ const navigation = [
   { name: 'REITs', href: '/reits', icon: TrendingUp },
   { name: 'AI Report', href: '/ai-report', icon: FileText },
   { name: 'My Report', href: '/my-report', icon: FileText },
+  { name: 'Admin Users', href: '/admin/users', icon: Shield },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 

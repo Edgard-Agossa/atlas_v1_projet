@@ -113,3 +113,57 @@ DB_HOST=localhost
 DB_PORT=5432
 SECRET_KEY=une_cle_secrete_django
 DEBUG=True
+
+
+
+
+# permet de 
+pip install djangorestframework
+# permet 
+pip install djangorestframework-simplejwt
+pip install django-cors-headers
+pip install python-decouple
+pip freeze > requirements.txt
+
+⚙️ Étape 2 : Configuration dans settings.py
+Ajouter dans INSTALLED_APPS :
+
+# config/settings.py
+INSTALLED_APPS = [
+    # ... apps existantes
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'corsheaders',
+    'authentication',
+    'inverstment',
+]
+
+# Ajouter la configuration REST Framework :
+# Ajouter à la fin du fichier settings.py
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20
+}
+
+# Configuration JWT
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+}
+
+# CORS
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Pour le développement React
+    "http://127.0.0.1:3000",
+]
+
+CORS_ALLOW_CREDENTIALS = True

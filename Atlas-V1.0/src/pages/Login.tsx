@@ -15,7 +15,7 @@ const Login: React.FC = () => {
   const [rememberMe, setRememberMe] = useState(false);
 
   
-  const { login, isLoading, isAuthenticated } = useAuth();
+  const { login, register, isLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -32,19 +32,19 @@ const Login: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
+
     if (isLogin) {
       if (!email || !password) {
         setError('Veuillez remplir tous les champs');
         return;
       }
-      
+
       try {
-        const success = await login(email, password);
-        if (success) {
+        const result = await login(email, password);
+        if (result.success) {
           navigate(from, { replace: true });
         } else {
-          setError('Email ou mot de passe incorrect');
+          setError(result.error || 'Email ou mot de passe incorrect');
         }
       } catch (err) {
         setError('Une erreur est survenue. Veuillez réessayer.');
@@ -58,9 +58,31 @@ const Login: React.FC = () => {
         setError('Les mots de passe ne correspondent pas');
         return;
       }
-      // Logique d'inscription ici
-      setError('Inscription réussie ! Vous pouvez maintenant vous connecter.');
-      setIsLogin(true);
+
+      try {
+        const result = await register({
+          firstName,
+          lastName,
+          email,
+          password,
+          phone: '', // Optionnel pour l'instant
+        });
+
+        if (result.success) {
+          setError('Inscription réussie ! Vous pouvez maintenant vous connecter.');
+          setIsLogin(true);
+          // Reset form
+          setFirstName('');
+          setLastName('');
+          setEmail('');
+          setPassword('');
+          setConfirmPassword('');
+        } else {
+          setError(result.error || 'Erreur lors de l\'inscription');
+        }
+      } catch (err) {
+        setError('Une erreur est survenue lors de l\'inscription.');
+      }
     }
   };
 

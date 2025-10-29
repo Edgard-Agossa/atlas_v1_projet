@@ -7,14 +7,17 @@ interface User {
   lastName: string;
   role: 'admin' | 'member';
   avatar?: string;
+  phone?: string;
+  join_date?: string;
+  last_login?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (userData: RegisterData) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (userData: RegisterData) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
 
@@ -23,19 +26,13 @@ interface RegisterData {
   lastName: string;
   email: string;
   password: string;
+  phone?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Données utilisateur simulées
-const MOCK_USER: User = {
-  id: '1',
-  email: 'edgardagossa5@gmail.com',
-  firstName: 'Edgard',
-  lastName: 'Agossa',
-  role: 'admin',
-  avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'
-};
+// Configuration API
+const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -54,43 +51,96 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
-    
-    // Simulation d'une requête API
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Vérification des identifiants
-    if (email === 'edgardagossa5@gmail.com' && password === '123') {
-      setUser(MOCK_USER);
-      localStorage.setItem('phronesis_user', JSON.stringify(MOCK_USER));
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const userData: User = {
+          id: data.user.id.toString(),
+          email: data.user.email,
+          firstName: data.user.first_name,
+          lastName: data.user.last_name,
+          role: data.user.role,
+          avatar: data.user.avatar,
+          phone: data.user.phone,
+          join_date: data.user.join_date,
+          last_login: data.user.last_login,
+        };
+
+        setUser(userData);
+        localStorage.setItem('phronesis_user', JSON.stringify(userData));
+        setIsLoading(false);
+        return { success: true };
+      } else {
+        setIsLoading(false);
+        return { success: false, error: data.error || 'Erreur de connexion' };
+      }
+    } catch (error) {
+      console.error('Erreur lors de la connexion:', error);
       setIsLoading(false);
-      return true;
+      return { success: false, error: 'Erreur réseau. Vérifiez que le serveur backend est démarré.' };
     }
-    
-    setIsLoading(false);
-    return false;
   };
 
-  const register = async (userData: RegisterData): Promise<boolean> => {
+  const register = async (userData: RegisterData): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
-    
-    // Simulation d'une requête API
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Créer un nouvel utilisateur
-    const newUser: User = {
-      id: Date.now().toString(),
-      email: userData.email,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      role: 'member'
-    };
-    
-    setUser(newUser);
-    localStorage.setItem('phronesis_user', JSON.stringify(newUser));
-    setIsLoading(false);
-    return true;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/register/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          first_name: userData.firstName,
+          last_name: userData.lastName,
+          email: userData.email,
+          password: userData.password,
+          phone: userData.phone,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const newUser: User = {
+          id: data.user.id.toString(),
+          email: data.user.email,
+          firstName: data.user.first_name,
+          lastName: data.user.last_name,
+          role: data.user.role,
+          avatar: data.user.avatar,
+          phone: data.user.phone,
+          join_date: data.user.join_date,
+        };
+
+        setUser(newUser);
+        localStorage.setItem('phronesis_user', JSON.stringify(newUser));
+        setIsLoading(false);
+        return { success: true };
+      } else {
+        setIsLoading(false);
+        return { success: false, error: data.error || 'Erreur lors de l\'inscription' };
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'inscription:', error);
+      setIsLoading(false);
+      return { success: false, error: 'Erreur réseau. Vérifiez que le serveur backend est démarré.' };
+    }
   };
 
   const logout = () => {
