@@ -41,11 +41,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     // Vérifier si l'utilisateur est déjà connecté au chargement
     const savedUser = localStorage.getItem('phronesis_user');
-    if (savedUser) {
+    const savedToken = localStorage.getItem('token');
+    if (savedUser && savedToken) {
       try {
         setUser(JSON.parse(savedUser));
       } catch (error) {
         localStorage.removeItem('phronesis_user');
+        localStorage.removeItem('token');
       }
     }
     setIsLoading(false);
@@ -83,6 +85,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         setUser(userData);
         localStorage.setItem('phronesis_user', JSON.stringify(userData));
+        localStorage.setItem('token', data.access_token); // Stocker le token JWT
         setIsLoading(false);
         return { success: true };
       } else {
@@ -130,6 +133,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         setUser(newUser);
         localStorage.setItem('phronesis_user', JSON.stringify(newUser));
+        localStorage.setItem('token', data.access_token); // Stocker le token JWT
         setIsLoading(false);
         return { success: true };
       } else {
@@ -146,6 +150,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = () => {
     setUser(null);
     localStorage.removeItem('phronesis_user');
+    localStorage.removeItem('token');
   };
 
   const value: AuthContextType = {

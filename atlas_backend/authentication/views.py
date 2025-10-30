@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import permission_classes
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
@@ -36,7 +37,8 @@ class RegisterView(APIView):
                 email=data['email'],
                 password=make_password(data['password']),
                 phone=data.get('phone'),
-                role=data.get('role', 'member')
+                role=data.get('role', 'member'),
+                created_by=request.user if request.user.is_authenticated else None
             )
 
             return Response({
@@ -74,8 +76,14 @@ class LoginView(APIView):
             user.last_login = timezone.now()
             user.save()
 
+            # Générer les tokens JWT
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+
             return Response({
                 'message': 'Connexion réussie',
+                'access_token': access_token,
+                'refresh_token': str(refresh),
                 'user': {
                     'id': user.id,
                     'first_name': user.first_name,
@@ -162,7 +170,12 @@ class UserListView(APIView):
                 'role': user.role,
                 'is_active': user.is_active,
                 'join_date': user.join_date,
-                'last_login': user.last_login
+                'last_login': user.last_login,
+                'created_by': {
+                    'id': user.created_by.id,
+                    'first_name': user.created_by.first_name,
+                    'last_name': user.created_by.last_name
+                } if user.created_by else None
             })
 
         return Response({
@@ -192,7 +205,12 @@ class UserDetailView(APIView):
             'role': user.role,
             'is_active': user.is_active,
             'join_date': user.join_date,
-            'last_login': user.last_login
+            'last_login': user.last_login,
+            'created_by': {
+                'id': user.created_by.id,
+                'first_name': user.created_by.first_name,
+                'last_name': user.created_by.last_name
+            } if user.created_by else None
         })
 
     def put(self, request, user_id):

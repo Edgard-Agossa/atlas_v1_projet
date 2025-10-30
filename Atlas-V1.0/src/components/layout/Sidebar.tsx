@@ -13,6 +13,7 @@ import {
   Shield
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -41,19 +42,29 @@ const navigation = [
 ];
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+  const { user } = useAuth();
+
+  // Filtrer la navigation selon le rôle de l'utilisateur
+  const filteredNavigation = navigation.filter(item => {
+    if (item.name === 'Admin Users' && user?.role !== 'admin') {
+      return false;
+    }
+    return true;
+  });
+
   return (
     <>
       {/* Overlay pour mobile */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={onClose}
         />
       )}
-      
+
       <motion.div
         initial={false}
-        animate={{ 
+        animate={{
           width: isOpen ? 280 : 0
         }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
@@ -68,11 +79,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               <TrendingUp className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">John Doe</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Admin</p>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">{user?.firstName} {user?.lastName}</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{user?.role === 'admin' ? 'Admin' : 'Membre'}</p>
             </div>
           </div>
-          
+
           {/* Valeur totale */}
           <div className="flex items-center space-x-3 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-center w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg">
@@ -92,7 +103,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         {/* Navigation scrollable - Seule cette partie scroll */}
         <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
           <nav className="p-4 space-y-1">
-            {navigation.map((item) => (
+            {filteredNavigation.map((item) => (
               <NavLink
                 key={item.name}
                 to={item.href}
@@ -117,7 +128,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               </NavLink>
             ))}
           </nav>
-          
+
           {/* Espace en bas pour éviter que le dernier élément soit coupé */}
           <div className="h-4" />
         </div>

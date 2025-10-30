@@ -41,7 +41,9 @@ const AdminUsers: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingUser, setEditingUser] = useState<Partial<User>>({});
+  const [creatingUser, setCreatingUser] = useState<Partial<User & { password: string }>>({});
   const [saving, setSaving] = useState(false);
 
   // Vérifier si l'utilisateur est admin
@@ -89,6 +91,19 @@ const AdminUsers: React.FC = () => {
     return matchesSearch && matchesRole && matchesStatus;
   });
 
+  const handleCreateUser = () => {
+    setCreatingUser({
+      first_name: '',
+      last_name: '',
+      email: '',
+      phone: '',
+      password: 'Defaut@123',
+      role: 'member',
+      is_active: true,
+    });
+    setShowCreateModal(true);
+  };
+
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
     setEditingUser({
@@ -105,6 +120,47 @@ const AdminUsers: React.FC = () => {
   const handleDeleteUser = (user: User) => {
     setSelectedUser(user);
     setShowDeleteModal(true);
+  };
+
+  const createUser = async () => {
+    if (!creatingUser.first_name || !creatingUser.last_name || !creatingUser.email || !creatingUser.password) {
+      setError('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/auth/register/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({
+          first_name: creatingUser.first_name,
+          last_name: creatingUser.last_name,
+          email: creatingUser.email,
+          password: creatingUser.password,
+          phone: creatingUser.phone,
+          role: creatingUser.role,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUsers([...users, data.user]);
+        setShowCreateModal(false);
+        setCreatingUser({});
+        setError('');
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Erreur lors de la création');
+      }
+    } catch (err) {
+      setError('Erreur réseau lors de la création');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const saveUserChanges = async () => {
@@ -215,6 +271,13 @@ const AdminUsers: React.FC = () => {
                   {filteredUsers.length} utilisateur{filteredUsers.length > 1 ? 's' : ''}
                 </div>
               </div>
+              <button
+                onClick={handleCreateUser}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>Nouvel utilisateur</span>
+              </button>
             </div>
           </div>
         </div>
@@ -402,6 +465,129 @@ const AdminUsers: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Create User Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl max-w-md w-full mx-4">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">
+                Créer un nouvel utilisateur
+              </h3>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Prénom *
+                  </label>
+                  <input
+                    type="text"
+                    value={creatingUser.first_name || ''}
+                    onChange={(e) => setCreatingUser({...creatingUser, first_name: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nom *
+                  </label>
+                  <input
+                    type="text"
+                    value={creatingUser.last_name || ''}
+                    onChange={(e) => setCreatingUser({...creatingUser, last_name: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  value={creatingUser.email || ''}
+                  onChange={(e) => setCreatingUser({...creatingUser, email: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mot de passe *
+                </label>
+                <input
+                  type="password"
+                  value={creatingUser.password || ''}
+                  onChange={(e) => setCreatingUser({...creatingUser, password: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Entrez un mot de passe"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Mot de passe par défaut : <span className="font-medium text-blue-600">Defaut@123</span>
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Téléphone
+                </label>
+                <input
+                  type="tel"
+                  value={creatingUser.phone || ''}
+                  onChange={(e) => setCreatingUser({...creatingUser, phone: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Rôle
+                </label>
+                <select
+                  value={creatingUser.role || 'member'}
+                  onChange={(e) => setCreatingUser({...creatingUser, role: e.target.value as 'admin' | 'member'})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="member">Membre</option>
+                  <option value="admin">Administrateur</option>
+                </select>
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="create_is_active"
+                  checked={creatingUser.is_active || false}
+                  onChange={(e) => setCreatingUser({...creatingUser, is_active: e.target.checked})}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="create_is_active" className="ml-2 text-sm text-gray-700">
+                  Compte actif
+                </label>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={createUser}
+                disabled={saving}
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-lg transition-colors flex items-center"
+              >
+                {saving ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                ) : null}
+                Créer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit User Modal */}
       {showEditModal && selectedUser && (

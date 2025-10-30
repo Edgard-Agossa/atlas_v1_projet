@@ -66,7 +66,11 @@ const AppContent: React.FC = () => {
                       <Route path="/my-report" element={<MyReport />} />
                       <Route path="/reports" element={<Reports {...clubData} />} />
                       <Route path="/settings" element={<Settings />} />
-                      <Route path="/admin/users" element={<AdminUsers />} />
+                      <Route path="/admin/users" element={
+                        <ProtectedRoute adminOnly={true}>
+                          <AdminUsers />
+                        </ProtectedRoute>
+                      } />
                     </Routes>
                   </div>
                 </main>
