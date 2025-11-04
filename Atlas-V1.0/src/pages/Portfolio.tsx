@@ -6,18 +6,28 @@ import {
   Filter, 
   Download,
   Eye,
-  MoreHorizontal
+  MoreHorizontal,
+  Plus
 } from 'lucide-react';
 import { Holding, PortfolioType } from '../types';
+import { useAuth } from '../contexts/AuthContext';
+import AddAssetModal from '../components/AddAssetModal';
 
 interface PortfolioProps {
   holdings: Holding[];
   portfolios: { [key in PortfolioType]: any };
+  addHolding: (holding: Omit<Holding, 'id' | 'marketValue' | 'unrealizedGain' | 'unrealizedGainLoss' | 'unrealizedGainPercent' | 'lastUpdated'>) => Promise<void>;
 }
 
-const Portfolio: React.FC<PortfolioProps> = ({ holdings, portfolios }) => {
+const Portfolio: React.FC<PortfolioProps> = ({ holdings, portfolios, addHolding }) => {
   const [selectedPortfolio, setSelectedPortfolio] = useState<'ALL' | PortfolioType>('ALL');
   const [sortBy, setSortBy] = useState<'value' | 'gain' | 'symbol'>('value');
+  const [isAddAssetModalOpen, setIsAddAssetModalOpen] = useState(false);
+  const { user } = useAuth();
+
+  const handleAddAsset = async (asset: Omit<Holding, 'id' | 'marketValue' | 'unrealizedGain' | 'unrealizedGainLoss' | 'unrealizedGainPercent' | 'lastUpdated'>) => {
+    await addHolding(asset);
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -70,8 +80,24 @@ const Portfolio: React.FC<PortfolioProps> = ({ holdings, portfolios }) => {
             <Download className="w-4 h-4 mr-2" />
             Exporter
           </button>
+          {user?.role === 'admin' && (
+            <button 
+              className="btn-primary flex items-center"
+              onClick={() => setIsAddAssetModalOpen(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Ajouter un actif
+            </button>
+          )}
         </div>
       </div>
+
+      {isAddAssetModalOpen && (
+        <AddAssetModal 
+          onClose={() => setIsAddAssetModalOpen(false)}
+          onAddAsset={handleAddAsset}
+        />
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

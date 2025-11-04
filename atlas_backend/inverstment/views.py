@@ -1,9 +1,11 @@
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Sum, Count
-from .models import Transaction, Portfolio, Member
+from .models import Transaction, Portfolio, Member, Holding
+from .serializers import HoldingSerializer
+from .yfinance_service import YFinanceService
 
 class TransactionListCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -61,11 +63,23 @@ class PortfolioListView(APIView):
         portfolios = Portfolio.objects.all()
         data = []
         for portfolio in portfolios:
-            # Calculer les valeurs
-            total_value = portfolio.cash
-            holdings_value = portfolio.holdings.aggregate(
-                total=Sum('quantity') * Sum('current_price')
-            )['total'] or 0
+            # Récupérer les prix en temps réel pour les holdings
+            holdings = portfolio.holdings.all()
+            symbols = [holding.symbol for holding in holdings]
+            current_prices = YFinanceService.get_multiple_prices(symbols)
+
+            total_value = float(portfolio.cash)
+            holdings_value = 0
+
+            for holding in holdings:
+                current_price = current_prices.get(holding.symbol, float(holding.current_price))
+                holding_value = float(holding.quantity) * current_price
+                holdings_value += holding_value
+
+                # Mettre à jour le prix actuel dans la base de données
+                holding.current_price = current_price
+                holding.save()
+
             total_value += holdings_value
 
             data.append({
@@ -100,3 +114,8 @@ class MemberListView(APIView):
                 'profile_type': member.profile_type
             })
         return Response(data)
+
+class HoldingListCreateView(generics.ListCreateAPIView):
+    queryset = Holding.objects.all()
+    serializer_class = HoldingSerializer
+    permission_classes = [IsAuthenticated]

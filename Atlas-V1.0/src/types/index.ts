@@ -74,6 +74,7 @@ export interface Portfolio {
   totalGainLoss: number;
   totalGainLossPercent: number;
   lastUpdated: string;
+  owner?: string;
 }
 
 export interface PerformanceDataPoint {

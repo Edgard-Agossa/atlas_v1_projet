@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { 
   Transaction, 
   Member, 
@@ -11,175 +11,75 @@ import {
   DashboardStats
 } from '../types';
 
+const API_BASE_URL = 'http://127.0.0.1:8000/api';
+
 export const useClubData = () => {
-  const [transactions, setTransactions] = useState<Transaction[]>([
-    {
-      id: '1',
-      type: TransactionType.DEPOSIT,
-      date: '2024-01-15',
-      portfolio: PortfolioType.PHRONESIS,
-      amount: 5000,
-      memberId: '1',
-      description: 'Dépôt initial'
-    },
-    {
-      id: '2',
-      type: TransactionType.BUY,
-      date: '2024-01-16',
-      portfolio: PortfolioType.PHRONESIS,
-      amount: 2500,
-      asset: 'AAPL',
-      quantity: 15,
-      price: 166.67,
-      description: 'Achat Apple Inc.'
-    },
-    {
-      id: '3',
-      type: TransactionType.BUY,
-      date: '2024-01-20',
-      portfolio: PortfolioType.FLAGSHIP,
-      amount: 3000,
-      asset: 'MSFT',
-      quantity: 8,
-      price: 375.00,
-      description: 'Achat Microsoft Corp.'
-    },
-    {
-      id: '4',
-      type: TransactionType.DIVIDEND,
-      date: '2024-02-01',
-      portfolio: PortfolioType.PHRONESIS,
-      amount: 45.20,
-      asset: 'AAPL',
-      description: 'Dividende trimestriel Apple'
-    }
-  ]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [holdings, setHoldings] = useState<Holding[]>([]);
+  const [portfolios, setPortfolios] = useState<{ [key in PortfolioType]: Portfolio }>({} as any);
 
-  const [members] = useState<Member[]>([
-    {
-      id: '1',
-      name: 'Jean Dupont',
-      email: 'jean.dupont@email.com',
-      phone: '+33 6 12 34 56 78',
-      joinDate: '2024-01-01',
-      totalContribution: 15000,
-      currentBalance: 16250,
-      investedCapital: 15000,
-      shares: 150,
-      status: MemberStatus.ACTIVE,
-      profileType: 'Premium',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'
-    },
-    {
-      id: '2',
-      name: 'Marie Martin',
-      email: 'marie.martin@email.com',
-      phone: '+33 6 98 76 54 32',
-      joinDate: '2024-01-01',
-      totalContribution: 12000,
-      currentBalance: 13100,
-      investedCapital: 12000,
-      shares: 120,
-      status: MemberStatus.ACTIVE,
-      profileType: 'Standard',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face'
-    },
-    {
-      id: '3',
-      name: 'Pierre Durand',
-      email: 'pierre.durand@email.com',
-      phone: '+33 6 11 22 33 44',
-      joinDate: '2024-02-01',
-      totalContribution: 8000,
-      currentBalance: 8420,
-      investedCapital: 8000,
-      shares: 80,
-      status: MemberStatus.ACTIVE,
-      profileType: 'Standard'
-    }
-  ]);
+  const fetchHoldings = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch(`${API_BASE_URL}/investment/holdings/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      const rawHoldings = await response.json();
+      const processedHoldings = rawHoldings.results.map((h: any) => {
+        const invested = h.avg_price * h.quantity;
+        const marketValue = h.current_price * h.quantity;
+        const unrealizedGain = marketValue - invested;
+        const unrealizedGainPercent = invested > 0 ? (unrealizedGain / invested) * 100 : 0;
 
-  const holdings: Holding[] = [
-    {
-      id: '1',
-      asset: 'AAPL',
-      symbol: 'AAPL',
-      name: 'Apple Inc.',
-      quantity: 15,
-      avgPrice: 166.67,
-      averageCost: 166.67,
-      currentPrice: 185.50,
-      marketValue: 2782.50,
-      unrealizedGain: 282.45,
-      unrealizedGainLoss: 282.45,
-      unrealizedGainPercent: 11.29,
-      portfolio: PortfolioType.PHRONESIS,
-      sector: 'Technology',
-      assetType: 'stock',
-      lastUpdated: '2024-03-15T10:30:00Z'
-    },
-    {
-      id: '2',
-      asset: 'MSFT',
-      symbol: 'MSFT',
-      name: 'Microsoft Corporation',
-      quantity: 8,
-      avgPrice: 375.00,
-      averageCost: 375.00,
-      currentPrice: 420.75,
-      marketValue: 3366.00,
-      unrealizedGain: 366.00,
-      unrealizedGainLoss: 366.00,
-      unrealizedGainPercent: 12.20,
-      portfolio: PortfolioType.FLAGSHIP,
-      sector: 'Technology',
-      assetType: 'stock',
-      lastUpdated: '2024-03-15T10:30:00Z'
-    },
-    {
-      id: '3',
-      asset: 'GOOGL',
-      symbol: 'GOOGL',
-      name: 'Alphabet Inc.',
-      quantity: 5,
-      avgPrice: 140.00,
-      averageCost: 140.00,
-      currentPrice: 152.30,
-      marketValue: 761.50,
-      unrealizedGain: 61.50,
-      unrealizedGainLoss: 61.50,
-      unrealizedGainPercent: 8.79,
-      portfolio: PortfolioType.PHRONESIS,
-      sector: 'Technology',
-      assetType: 'stock',
-      lastUpdated: '2024-03-15T10:30:00Z'
+        return {
+          id: h.id,
+          asset: h.asset,
+          symbol: h.symbol,
+          name: h.name,
+          quantity: h.quantity,
+          avgPrice: h.avg_price,
+          averageCost: h.avg_price, // or calculate as needed
+          currentPrice: h.current_price,
+          marketValue: marketValue,
+          unrealizedGain: unrealizedGain,
+          unrealizedGainLoss: unrealizedGain, // or calculate as needed
+          unrealizedGainPercent: unrealizedGainPercent,
+          portfolio: h.portfolio,
+          sector: h.sector,
+          assetType: h.asset_type,
+          lastUpdated: h.last_updated,
+        };
+      });
+      setHoldings(processedHoldings);
+    } catch (error) {
+      console.error('Error fetching holdings:', error);
     }
-  ];
+  };
 
-  const portfolios: { [key in PortfolioType]: Portfolio } = useMemo(() => ({
-    [PortfolioType.PHRONESIS]: {
-      id: 'phronesis',
-      name: 'Phronesis (Passif)',
-      type: PortfolioType.PHRONESIS,
-      holdings: holdings.filter(h => h.portfolio === PortfolioType.PHRONESIS),
-      cash: 12500,
-      totalValue: 16044.00,
-      totalGainLoss: 344.00,
-      totalGainLossPercent: 2.19,
-      lastUpdated: '2024-03-15T10:30:00Z'
-    },
-    [PortfolioType.FLAGSHIP]: {
-      id: 'flagship',
-      name: 'FlagShip (Actif)',
-      type: PortfolioType.FLAGSHIP,
-      holdings: holdings.filter(h => h.portfolio === PortfolioType.FLAGSHIP),
-      cash: 8200,
-      totalValue: 11566.00,
-      totalGainLoss: 366.00,
-      totalGainLossPercent: 3.27,
-      lastUpdated: '2024-03-15T10:30:00Z'
+  useEffect(() => {
+    fetchHoldings();
+    // Fetch other data like transactions, members, etc. in a similar way
+  }, []);
+
+  const addHolding = async (holding: Omit<Holding, 'id' | 'marketValue' | 'unrealizedGain' | 'unrealizedGainLoss' | 'unrealizedGainPercent' | 'lastUpdated'>) => {
+    const token = localStorage.getItem('token');
+    try {
+      await fetch(`${API_BASE_URL}/investment/holdings/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(holding),
+      });
+      fetchHoldings(); // Refetch holdings after adding a new one
+    } catch (error) {
+      console.error('Error adding holding:', error);
     }
-  }), []);
+  };
 
   const performanceHistory: PerformanceDataPoint[] = [
     { date: '2024-01-01', nav: 100.00, benchmark: 100.00, portfolioValue: 25000, cashValue: 5000 },
@@ -229,5 +129,6 @@ export const useClubData = () => {
     shareValue: 10.75,
     totalShares: members.reduce((sum, m) => sum + m.shares, 0),
     addTransaction,
+    addHolding,
   };
 };
