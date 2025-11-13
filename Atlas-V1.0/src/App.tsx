@@ -5,7 +5,7 @@ import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
-import Portfolio from './pages/Portfolio';
+import PortfolioSimple from './pages/PortfolioSimple';
 import Transactions from './pages/Transactions';
 import Members from './pages/Members';
 import Analytics from './pages/Analytics';
@@ -23,7 +23,7 @@ import MyReport from './pages/MyReport';
 import Allocation from './pages/Allocation';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import AdminUsers from './pages/AdminUsers';
+import AdminUsersPro from './pages/AdminUsersPro';
 import { useClubData } from './hooks/useClubData';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -50,7 +50,7 @@ const AppContent: React.FC = () => {
                     <Routes>
                       <Route path="/" element={<Navigate to="/dashboard" replace />} />
                       <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/portfolio" element={<Portfolio {...clubData} />} />
+                      <Route path="/portfolio" element={<PortfolioSimple />} />
                       <Route path="/transactions" element={<Transactions />} />
                       <Route path="/members" element={<Members />} />
                       <Route path="/analytics" element={<Analytics />} />
@@ -68,7 +68,7 @@ const AppContent: React.FC = () => {
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/admin/users" element={
                         <ProtectedRoute adminOnly={true}>
-                          <AdminUsers />
+                          <AdminUsersPro />
                         </ProtectedRoute>
                       } />
                     </Routes>
