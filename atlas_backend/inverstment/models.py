@@ -26,6 +26,8 @@ class Transaction(models.Model):
     quantity = models.DecimalField(max_digits=15, decimal_places=4, blank=True, null=True)
     price = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
     member_id = models.CharField(max_length=50, blank=True, null=True)
+    sender = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='sent_transactions')
+    receiver = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='received_transactions')
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -86,8 +88,6 @@ class Compte_member(models.Model):
     member = models.ForeignKey(User, on_delete=models.CASCADE, related_name='my_account')
     account_number = models.CharField(max_length=50, unique=True)
     balance = models.DecimalField(max_digits=15, decimal_places=2, default=0)
-    sender = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='sent_transactions')
-    receiver = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='received_transactions')
     portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, related_name='member_accounts')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
