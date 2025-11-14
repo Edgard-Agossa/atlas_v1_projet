@@ -34,7 +34,7 @@ def login_view(request):
                     'first_name': user.first_name,
                     'last_name': user.last_name,
                     'email': user.email,
-                    'role': user.role,
+                    'role': user.role.name if user.role else None,
                     'avatar': user.avatar,
                     'total_contribution': float(user.total_contribution),
                     'current_balance': float(user.current_balance),

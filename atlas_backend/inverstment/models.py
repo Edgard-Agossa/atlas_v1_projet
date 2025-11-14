@@ -55,6 +55,8 @@ class Portfolio(models.Model):
     type = models.CharField(max_length=20, choices=Transaction.PORTFOLIO_TYPES, unique=True)
     cash = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     last_updated = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_portfolios')
 
     def __str__(self):
         return self.name
@@ -80,3 +82,27 @@ class Member(models.Model):
 
     def __str__(self):
         return self.name
+class Compte_member(models.Model):
+    member = models.ForeignKey(User, on_delete=models.CASCADE, related_name='my_account')
+    account_number = models.CharField(max_length=50, unique=True)
+    balance = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    sender = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='sent_transactions')
+    receiver = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='received_transactions')
+    portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, related_name='member_accounts')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        unique_together = ['member', 'portfolio']# Empêche qu'in membre ait plusieurs comptes pour le même portefeuille
+        verbose_name = 'Compte Membre'
+        verbose_name_plural = 'Comptes Membres'
+    
+    def __str__(self):
+        return f"{self.member.name} - {self.portfolio.name} ({self.account_number})"
+    
+    def save(self, *args, **kwargs):
+        if not self.account_number:
+            import uuid
+            self.account_number = f"{self.portfolio.type[:3]}-{str(uuid.uuid4())[:8].upper()}"
+        super().save(*args, **kwargs)

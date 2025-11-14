@@ -7,7 +7,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
-from .models import User
+from .models import User, Role
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -31,13 +31,16 @@ class RegisterView(APIView):
 
         # Créer l'utilisateur
         try:
+            # Récupérer le rôle member par défaut
+            member_role = Role.objects.get(name='member')
+            
             user = User.objects.create(
                 first_name=data['first_name'],
                 last_name=data['last_name'],
                 email=data['email'],
                 password=make_password(data['password']),
                 phone=data.get('phone'),
-                role=data.get('role', 'member'),
+                role=member_role,
                 created_by=request.user if request.user.is_authenticated else None
             )
 
@@ -48,7 +51,7 @@ class RegisterView(APIView):
                     'first_name': user.first_name,
                     'last_name': user.last_name,
                     'email': user.email,
-                    'role': user.role,
+                    'role': user.role.name if user.role else None,
                     'join_date': user.join_date
                 }
             }, status=status.HTTP_201_CREATED)
@@ -89,7 +92,7 @@ class LoginView(APIView):
                     'first_name': user.first_name,
                     'last_name': user.last_name,
                     'email': user.email,
-                    'role': user.role,
+                    'role': user.role.name if user.role else None,
                     'avatar': user.avatar,
                     'join_date': user.join_date
                 }
@@ -111,7 +114,7 @@ class ProfileView(APIView):
             'email': user.email,
             'phone': user.phone,
             'avatar': user.avatar,
-            'role': user.role,
+            'role': user.role.name if user.role else None,
             'join_date': user.join_date,
             'last_login': user.last_login
         })
@@ -138,7 +141,7 @@ class ProfileView(APIView):
                     'email': user.email,
                     'phone': user.phone,
                     'avatar': user.avatar,
-                    'role': user.role
+                    'role': user.role.name if user.role else None,
                 }
             })
         except Exception as e:
@@ -151,7 +154,7 @@ class UserListView(APIView):
 
     def get(self, request):
         # Vérifier si l'utilisateur est admin
-        if request.user.role != 'admin':
+        if request.user.role.name != 'admin':
             return Response({
                 'error': 'Accès non autorisé. Rôle admin requis.'
             }, status=status.HTTP_403_FORBIDDEN)
@@ -167,7 +170,7 @@ class UserListView(APIView):
                 'email': user.email,
                 'phone': user.phone,
                 'avatar': user.avatar,
-                'role': user.role,
+                'role': user.role.name if user.role else None,
                 'is_active': user.is_active,
                 'join_date': user.join_date,
                 'last_login': user.last_login,
@@ -188,7 +191,7 @@ class UserDetailView(APIView):
 
     def get(self, request, user_id):
         # Vérifier si l'utilisateur est admin
-        if request.user.role != 'admin':
+        if request.user.role.name != 'admin':
             return Response({
                 'error': 'Accès non autorisé. Rôle admin requis.'
             }, status=status.HTTP_403_FORBIDDEN)
@@ -202,7 +205,7 @@ class UserDetailView(APIView):
             'email': user.email,
             'phone': user.phone,
             'avatar': user.avatar,
-            'role': user.role,
+            'role': user.role.name if user.role else None,
             'is_active': user.is_active,
             'join_date': user.join_date,
             'last_login': user.last_login,
@@ -215,7 +218,7 @@ class UserDetailView(APIView):
 
     def put(self, request, user_id):
         # Vérifier si l'utilisateur est admin
-        if request.user.role != 'admin':
+        if request.user.role.name != 'admin':
             return Response({
                 'error': 'Accès non autorisé. Rôle admin requis.'
             }, status=status.HTTP_403_FORBIDDEN)
@@ -245,7 +248,7 @@ class UserDetailView(APIView):
                     'email': user.email,
                     'phone': user.phone,
                     'avatar': user.avatar,
-                    'role': user.role,
+                    'role': user.role.name if user.role else None,
                     'is_active': user.is_active
                 }
             })
@@ -256,7 +259,7 @@ class UserDetailView(APIView):
 
     def delete(self, request, user_id):
         # Vérifier si l'utilisateur est admin
-        if request.user.role != 'admin':
+        if request.user.role.name != 'admin':
             return Response({
                 'error': 'Accès non autorisé. Rôle admin requis.'
             }, status=status.HTTP_403_FORBIDDEN)

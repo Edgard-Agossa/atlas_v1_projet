@@ -167,3 +167,8 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+
+python manage.py migrate
+python manage.py create_default_roles
+python manage.py createsuperuser

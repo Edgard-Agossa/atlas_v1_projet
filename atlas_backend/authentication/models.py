@@ -2,8 +2,14 @@ from django.db import models
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
+class Role(models.Model):
+    name= models.CharField(max_length=30, unique=True)
+    description= models.TextField(blank=True, null=True)
 
+    def __str__(self):
+        return self.name
 class UserManager(BaseUserManager):
+
     def create_user(self, email, first_name, last_name, password=None, **extra_fields):
         if not email:
             raise ValueError('L\'email est obligatoire')
@@ -16,8 +22,11 @@ class UserManager(BaseUserManager):
     def create_superuser(self, email, first_name, last_name, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('role', 'admin')
+        #Récupérer le role admin
+        # admin_role, _  = Role.objects.get_or_create(name = 'admin', defaults={'description':'Administrateur'})
+        # extra_fields.setdefault('role', admin_role)
         return self.create_user(email, first_name, last_name, password, **extra_fields)
+
 
 
 class User(AbstractBaseUser):
@@ -28,11 +37,7 @@ class User(AbstractBaseUser):
 
     phone = models.CharField(max_length=20, blank=True, null=True)
     avatar = models.URLField(blank=True, null=True)
-    role = models.CharField(
-        max_length=10,
-        choices=[('admin', 'Admin'), ('member', 'Member')],
-        default='member'
-    )
+    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True)
 
     # Statut
     is_active = models.BooleanField(default=True)
