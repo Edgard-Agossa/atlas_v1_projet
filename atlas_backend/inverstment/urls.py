@@ -4,12 +4,13 @@ from . import views
 urlpatterns = [
     path('transactions/', views.TransactionListCreateView.as_view(), name='transaction-list'),
     path('portfolios/', views.PortfolioListView.as_view(), name='portfolio-list'),
+    path('portfolio/', views.PortfolioView.as_view(), name='portfolio-list'),
     path('members/', views.MemberListView.as_view(), name='member-list'),
     # Utiliser les URLs simplifiées pour les holdings
     path('', include('inverstment.urls_simple')),
     
     #Opération sur les comptes des membres
-    path('accounts/deposit/',views.DepositView.as_view(), name='account-deposit'),
+    path('accounts/deposit/<int:member_id>/',views.DepositView.as_view(), name='account-deposit'),
     path('accounts/withdraw/',views.WithdrawView.as_view(), name='account-withdraw'),
     # Gestion des comptes membres
     path('accounts/member/<int:member_id>/', views.MemberAccountsView.as_view(), name='member-accounts'),

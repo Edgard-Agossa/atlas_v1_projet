@@ -6,18 +6,40 @@ from decimal import Decimal
 
 
 class AccountManager:
-    @staticmethod  # Un seul @staticmethod
-    def deposit(compte_id, amount, description=None, created_by=None):
+    @staticmethod
+    def deposit(compte_id,amount, member_id=None, description=None, created_by=None):
         """Effectuer un dépôt sur le compte membre"""
-        if compte_id is None:
-            raise ValueError("L'identifiant du compte ne peut pas être nul.")
-        
-        if amount <= 0:
+        if amount is None or amount <= 0:
             raise ValueError("Le montant du dépôt doit être supérieur à zéro.")
         
         with transaction.atomic():
-            compte = Compte_member.objects.select_for_update().get(id=compte_id)
+            compte = None
             
+            # Essayer de récupérer le compte existant
+            if compte_id:
+                try:
+                    compte = Compte_member.objects.select_for_update().get(id=compte_id)
+                except Compte_member.DoesNotExist:
+                    compte = None
+            
+            # Si le compte n'existe pas, le créer
+            if compte is None:
+                if member_id is None:
+                    raise ValueError("Le membre doit être spécifié pour créer un nouveau compte.")
+                
+                # Créer les comptes pour le membre
+                result = AccountManager.creat_member_account(member_id)
+                if result['created_accounts']:
+                    compte = result['created_accounts'][0]  # Prendre le premier compte créé
+                else:
+                    # Si aucun compte créé, essayer de récupérer un compte existant
+                    existing_accounts = AccountManager.get_member_accounts(member_id)
+                    if existing_accounts:
+                        compte = existing_accounts[0]
+                    else:
+                        raise ValueError("Impossible de créer ou trouver un compte pour ce membre.")
+            
+            # Effectuer le dépôt
             compte.balance += Decimal(str(amount))
             compte.save()
             
@@ -27,8 +49,8 @@ class AccountManager:
                 portfolio=compte.portfolio.type,
                 amount=amount,
                 member_id=str(compte.member.id),
-                sender=created_by,  # L'utilisateur qui fait le dépôt
-                receiver=compte.member,  # Le propriétaire du compte,
+                sender=created_by,
+                receiver=compte.member,
                 description=description or f"Dépôt sur compte {compte.account_number}"
             )
             
@@ -37,6 +59,7 @@ class AccountManager:
                 'message': f"Dépôt de {amount}€ effectué avec succès",
                 'new_balance': float(compte.balance)
             }
+
         
     @staticmethod 
     def withdraw(compte_id, amount, description=None, created_by=None):

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {AccountService,Transaction} from '../contexts/DataUrl';
+import {AccountService,Transaction, Prtfolios} from '../contexts/DataUrl';
 
 const Transactions: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -13,22 +13,29 @@ const Transactions: React.FC = () => {
 
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [portfolio, setPortfolio] = useState<Prtfolios[]>([]);
+  const [loading, setLoading] = useState(true);
   const fetcTransactions = async () => {
     setLoading(true);
     try {
      const data =  await AccountService.getAllTransactions();
+     //Méthode pour la récupération des portfolios
+     const portfoliosData = await AccountService.getAllPortfolios();
      setTransactions(data.transactions || []);
+     setPortfolio(portfoliosData || [])
+
   } catch (error) {
     console.error('Erreur:', error);
   } finally {
     setLoading(false);
   }
 };
-
 useEffect(() => {
   fetcTransactions();
 }, []);
+
+console.log(portfolio)
+
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'BUY':
@@ -45,7 +52,7 @@ useEffect(() => {
   };
 
   const getPortfolioColor = (portfolio: string) => {
-    return portfolio === 'Phronesis' ? 'bg-blue-600 text-white' : 'bg-teal-600 text-white';
+    return portfolio === 'PHRONESIS' ? 'bg-blue-600 text-white' : 'bg-teal-600 text-white';
   };
 
   return (
@@ -66,8 +73,10 @@ useEffect(() => {
                 onChange={(e) => setFormData({...formData, portfolio: e.target.value})}
                 className="w-full px-3 py-2 bg-gray-700 dark:bg-gray-600 text-white rounded border border-gray-600 dark:border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option>Phronesis (Passive)</option>
-                <option>FlagShip (Active)</option>
+                {portfolio.map((p) =>(
+                  <option key={p.id} value={p.type}> {p.type}</option>
+                  
+                ))}
               </select>
             </div>
 

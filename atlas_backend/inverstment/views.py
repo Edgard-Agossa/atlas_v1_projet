@@ -93,6 +93,28 @@ class PortfolioListView(APIView):
                 'last_updated': portfolio.last_updated
             })
         return Response(data)
+
+class PortfolioView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    #Recupération des portfolio
+    def get(self, request):
+        portfolios = Portfolio.objects.all()
+        data = []
+        for portfolio in portfolios:
+            data.append({
+                'id': portfolio.id,
+                'name': portfolio.name,
+                'type': portfolio.type,
+                'cash': portfolio.cash,
+                # 'created_by': portfolio.created_by,
+                # 'created_at': portfolio.created_at.strftime('%Y-%m-%d %H:%M:%S') if portfolio.created_at else '',
+                'is_active': portfolio.is_active
+                })
+        return Response(data)
+    
+    
+    
     def post(self, request):
         # if request.user.role.name if request.user.role else None != 'admin':
         #     return Response({'error': 'Accès non autorisé'}, status=status.HTTP_403_FORBIDDEN)
@@ -150,15 +172,17 @@ class HoldingListCreateView(generics.ListCreateAPIView):
 class DepositView(APIView):
     permission_classes = [IsAuthenticated]
     
-    def post(self, request):
+    def post(self, request,member_id=None):
         try: 
             compte_id = request.data.get('compte_id')
+            
             amount = request.data.get('amount')
             description= request.data.get('description')
             
             result = AccountManager.deposit(
                 compte_id=compte_id,
                 amount=float(amount),
+                member_id=member_id,
                 description=description,
                 created_by=request.user
             )

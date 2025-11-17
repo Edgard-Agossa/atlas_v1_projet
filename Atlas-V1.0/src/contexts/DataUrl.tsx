@@ -28,13 +28,23 @@ interface ApiResponse<T> {
     message?: string;
     accounts?: T[];
     transactions?: T[];
+    portfolios?: T[];
 }
 
+export interface Prtfolios {
+    id: number;
+    name: string;
+    type: string;
+    cash: number;
+    is_active: boolean;
+    created_by: string;
+    created_at: string;
+
+}
 //service API pour les compts
 export class AccountService {
     private static getAuthHeaders() {
         const token = localStorage.getItem('token');
-        console.log('token',token);
         return {
             'Content-Type': 'application/json',
             ...(token &&{'Authorization': `Bearer ${token}`})
@@ -103,7 +113,18 @@ export class AccountService {
     
     return response.json();
   }
+  //Récupérer les portofilio
+  static async getAllPortfolios(): Promise<Prtfolios[]> {
+    const resp = await fetch(`${API_BASE_URL}/investment/portfolio/`, {
+      headers: this.getAuthHeaders()
+    });
+    return resp.json()
+  }
+
+
+
 }
+
 
 
 
