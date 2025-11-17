@@ -14,6 +14,9 @@ urlpatterns = [
     # Gestion des comptes membres
     path('accounts/member/<int:member_id>/', views.MemberAccountsView.as_view(), name='member-accounts'),
     path('accounts/create/<int:member_id>/', views.CreateMemberAccountsView.as_view(), name='create-member-accounts'),
+    #get all transactions
+    path('accounts/transactions/all/', views.AllTransactionsView.as_view(), name='all-transactions'),
+    path('accounts/create/<int:member_id>/', views.CreateMemberAccountsView.as_view(), name='create-member-accounts'),
     
     # Transactions d'un compte
     path('accounts/<int:compte_id>/transactions/', views.AccountTransactionsView.as_view(), name='account-transactions'),

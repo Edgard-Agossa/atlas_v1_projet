@@ -300,3 +300,34 @@ class AccountTransactionsView(APIView):
                 'success': False,
                 'message': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)           
+
+class AllTransactionsView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        try:
+            
+            limit = request.query_params.get('limit')
+            if limit:
+                limit = int(limit)
+            transactions = AccountManager.get_all_transactions(limit)
+            return Response({
+                'success': True,
+                'transactions': [
+                    {
+                        'id': t.id,
+                        'type': t.type,
+                        'amount': t.amount,
+                        'date_heure':  t.created_at.strftime('%d/%m/%Y %H:%M:%S'),
+                        'description': t.description,
+                        'portfolio': t.portfolio,
+                        'created_at': t.created_at
+                    } for t in transactions
+                ]
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                'success': False,
+                'message': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+            

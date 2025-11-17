@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import {AccountService,Transaction} from '../contexts/DataUrl';
 
 const Transactions: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -9,65 +10,25 @@ const Transactions: React.FC = () => {
     date: '17/09/2025'
   });
 
-  const transactionsData = [
-    {
-      date: '2023-12-31',
-      type: 'WITHDRAWAL',
-      portfolio: 'FlagShip',
-      details: 'Charlie Brown',
-      amount: '$5,500.00'
-    },
-    {
-      date: '2023-06-01',
-      type: 'SELL',
-      portfolio: 'FlagShip',
-      details: 'XAU/USD (1 @ 1950)',
-      amount: '$1,950.00'
-    },
-    {
-      date: '2023-05-15',
-      type: 'BUY',
-      portfolio: 'FlagShip',
-      details: 'XAU/USD (2 @ 1900)',
-      amount: '$3,800.00'
-    },
-    {
-      date: '2023-03-10',
-      type: 'BUY',
-      portfolio: 'Phronesis',
-      details: 'GOOGL (10 @ 100)',
-      amount: '$1,000.00'
-    },
-    {
-      date: '2022-08-01',
-      type: 'BUY',
-      portfolio: 'Phronesis',
-      details: 'AAPL (30 @ 150)',
-      amount: '$4,500.00'
-    },
-    {
-      date: '2022-06-01',
-      type: 'DEPOSIT',
-      portfolio: 'FlagShip',
-      details: 'Charlie Brown',
-      amount: '$5,000.00'
-    },
-    {
-      date: '2019-07-20',
-      type: 'DEPOSIT',
-      portfolio: 'Phronesis',
-      details: 'Alice Johnson',
-      amount: '$10,000.00'
-    },
-    {
-      date: '2019-07-20',
-      type: 'DEPOSIT',
-      portfolio: 'Phronesis',
-      details: 'Bob Williams',
-      amount: '$15,000.00'
-    }
-  ];
 
+
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(false);
+  const fetcTransactions = async () => {
+    setLoading(true);
+    try {
+     const data =  await AccountService.getAllTransactions();
+     setTransactions(data.transactions || []);
+  } catch (error) {
+    console.error('Erreur:', error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  fetcTransactions();
+}, []);
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'BUY':
@@ -209,10 +170,10 @@ const Transactions: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
-                {transactionsData.map((transaction, index) => (
+                {transactions.map((transaction, index) => (
                   <tr key={index} className="hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                     <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-300">
-                      {transaction.date}
+                      {transaction.date_heure}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getTypeColor(transaction.type)}`}>
@@ -225,7 +186,7 @@ const Transactions: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-300">
-                      {transaction.details}
+                      {transaction.description}
                     </td>
                     <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-300 text-right">
                       {transaction.amount}

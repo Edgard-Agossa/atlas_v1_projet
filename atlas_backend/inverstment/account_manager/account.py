@@ -156,3 +156,11 @@ class AccountManager:
             transactions = transactions[:limit]
         
         return transactions   
+    
+    @staticmethod
+    def get_all_transactions(limit=None):
+        """Récupérer toutes les transactions"""
+        transactions = Transaction.objects.all().order_by('-created_at')
+        if limit: 
+            transactions = transactions[:limit]
+        return transactions
