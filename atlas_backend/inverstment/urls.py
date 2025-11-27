@@ -21,4 +21,7 @@ urlpatterns = [
     
     # Transactions d'un compte
     path('accounts/<int:compte_id>/transactions/', views.AccountTransactionsView.as_view(), name='account-transactions'),
+    #l'url pour les usdt
+    path('balance/<str:address>/', views.get_wallet_balance),
+    path('verify/', views.verify_payment),
 ]

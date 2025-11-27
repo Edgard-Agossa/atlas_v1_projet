@@ -172,3 +172,55 @@ CORS_ALLOW_CREDENTIALS = True
 python manage.py migrate
 python manage.py create_default_roles
 python manage.py createsuperuser
+
+
+# insstallation des dépendance pour le crypto
+
+
+pip install web3==6.15.1
+ tronpy==0.4.0 
+ python-binance==1.0.19
+  ccxt==4.2.25
+
+
+# **Excellente question ! Vous avez raison de vous interroger. Voici l'utilité réelle dans votre projet de paiement USDT :**
+
+Cas d'usage concrets :
+1. Vérification des dépôts clients
+# Un client dit : "J'ai envoyé 100 USDT à votre adresse"
+# Vous vérifiez le solde de VOTRE adresse de réception
+balance = usdt_service.get_usdt_balance("VOTRE_ADRESSE_DEPOT")
+# Si le solde a augmenté, le paiement est arrivé
+
+
+python
+2. Validation avant retrait
+# Avant d'autoriser un retrait de 50 USDT
+balance = usdt_service.get_usdt_balance("VOTRE_WALLET_PRINCIPAL")
+if balance >= 50:
+    # Autoriser le retrait
+else:
+    # Fonds insuffisants
+
+
+python
+3. Monitoring des wallets clients
+# Vérifier si un client a assez d'USDT pour un investissement
+client_balance = usdt_service.get_usdt_balance(client_wallet_address)
+if client_balance >= investment_amount:
+    # Procéder à l'investissement
+
+
+python
+Ce qui manque pour un vrai système de paiement :
+1. Génération d'adresses uniques par client
+2. Surveillance automatique des transactions
+3. Webhook pour notifications en temps réel
+4. Gestion des confirmations blockchain
+Votre fonction actuelle est utile pour :
+
+✅ Vérifier les soldes
+
+✅ Valider les fonds disponibles
+
+❌ Mais pas pour détecter automatiquement les nouveaux paiements

@@ -106,3 +106,46 @@ class Compte_member(models.Model):
             import uuid
             self.account_number = f"{self.portfolio.type[:3]}-{str(uuid.uuid4())[:8].upper()}"
         super().save(*args, **kwargs)
+        
+        
+        
+        
+# Modèles pour le système de paiement USDT
+class USDTPayment(models.Model):
+    PAYMENT_TYPES = [
+        ('DEPOSIT', 'Dépôt USDT'),
+        ('WITHDRAWAL', 'Retrait USDT'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('PENDING', 'En attente'),
+        ('CONFIRMED', 'Confirmé'),
+        ('FAILED', 'Échoué'),
+    ]
+    
+    NETWORK_CHOICES = [
+        ('TRC20', 'USDT Tron (TRC-20)'),
+        ('ERC20', 'USDT Ethereum (ERC-20)'),
+        ('BEP20', 'USDT BSC (BEP-20)'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='usdt_payments')
+    payment_type = models.CharField(max_length=20, choices=PAYMENT_TYPES)
+    amount_usdt = models.DecimalField(max_digits=20, decimal_places=6)
+    network = models.CharField(max_length=10, choices=NETWORK_CHOICES, default='TRC20')
+    wallet_address = models.CharField(max_length=100)
+    tx_hash = models.CharField(max_length=100, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    portfolio = models.CharField(max_length=20, choices=Transaction.PORTFOLIO_TYPES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    confirmed_at = models.DateTimeField(blank=True, null=True)
+    
+    def __str__(self):
+        return f"{self.payment_type} - {self.amount_usdt} USDT - {self.user.username}"
+
+class USDTWalletConfig(models.Model):
+    network = models.CharField(max_length=10, choices=USDTPayment.NETWORK_CHOICES, unique=True)
+    deposit_address = models.CharField(max_length=100)
+    private_key = models.CharField(max_length=200)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)

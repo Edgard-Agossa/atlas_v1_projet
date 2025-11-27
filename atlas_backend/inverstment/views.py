@@ -355,3 +355,18 @@ class AllTransactionsView(APIView):
                 'message': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
             
+from rest_framework.decorators import api_view, permission_classes
+from .usdt_transaction.usdt_service import usdt_service   
+        
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_wallet_balance(request, address):
+    balance = usdt_service.get_usdt_balance(address)
+    return Response({'balance': str(balance)})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def verify_payment(request):
+    tx_hash = request.data.get('tx_hash')
+    is_valid = usdt_service.check_transaction(tx_hash)
+    return Response({'is_valid': is_valid})
