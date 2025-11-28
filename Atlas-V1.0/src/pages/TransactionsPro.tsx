@@ -1,23 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import {AccountService,Transaction, Prtfolios} from '../contexts/DataUrl';
 import CryptoPaymentModal from '../components/CryptoPaymentModal';
-import AddTransactionModal from '../components/AddTransactionModal';
-import MomoPaymentModal from '../components/MomoPaymentModal';
-import { Wallet, Plus, Smartphone } from 'lucide-react';
+import { Wallet } from 'lucide-react';
 
 const Transactions: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [portfolio, setPortfolio] = useState<Prtfolios[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCryptoModal, setShowCryptoModal] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showMomoModal, setShowMomoModal] = useState(false);
-  const [showAllTransactions, setShowAllTransactions] = useState(false);
+
   const fetcTransactions = async () => {
     setLoading(true);
     try {
      const data =  await AccountService.getAllTransactions();
-     //Méthode pour la récupération des portfolios
      const portfoliosData = await AccountService.getAllPortfolios();
      setTransactions(data.transactions || []);
      setPortfolio(Array.isArray(portfoliosData) ? portfoliosData : [])
@@ -28,11 +23,10 @@ const Transactions: React.FC = () => {
     setLoading(false);
   }
 };
+
 useEffect(() => {
   fetcTransactions();
 }, []);
-
-console.log(portfolio)
 
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -63,17 +57,9 @@ console.log(portfolio)
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 mt-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Payment Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <button 
-            onClick={() => setShowAddModal(true)}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-3"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Ajouter Transaction</span>
-          </button>
-          
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <button 
             onClick={() => setShowCryptoModal(true)}
             className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-3"
@@ -82,56 +68,41 @@ console.log(portfolio)
             <span>Dépôt USDT</span>
           </button>
           
-          <button 
-            onClick={() => setShowMomoModal(true)}
-            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-3"
-          >
-            <Smartphone className="w-5 h-5" />
-            <span>Mobile Money</span>
-          </button>
-          
-          <button className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-3">
+          <button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-3">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
               <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" />
             </svg>
             <span>Dépôt Bancaire</span>
           </button>
           
-          <button className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-3">
+          <button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-3">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
             <span>Retrait</span>
           </button>
+          
+          <button className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-3">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Virement</span>
+          </button>
         </div>
-      </div>
 
-      {/* Transaction History - Full Width */}
-      <div className="w-full px-4 sm:px-6 lg:px-8 pb-8 mt-16">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+        {/* Transaction History */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
             <div>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Historique des Transactions</h2>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-                {showAllTransactions ? `${transactions.length} transactions` : `${Math.min(5, transactions.length)} sur ${transactions.length} transactions`}
-              </p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Toutes vos transactions récentes</p>
             </div>
-            <div className="flex items-center space-x-3">
-              {transactions.length > 5 && (
-                <button 
-                  onClick={() => setShowAllTransactions(!showAllTransactions)}
-                  className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
-                >
-                  {showAllTransactions ? 'Voir moins' : 'Voir plus'}
-                </button>
-              )}
-              <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center space-x-2">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-                <span>Export CSV</span>
-              </button>
-            </div>
+            <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center space-x-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+              <span>Export CSV</span>
+            </button>
           </div>
           
           <div className="overflow-x-auto">
@@ -156,7 +127,7 @@ console.log(portfolio)
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {(showAllTransactions ? transactions : transactions.slice(0, 5)).map((transaction, index) => (
+                {transactions.map((transaction, index) => (
                   <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                     <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-300 font-medium">
                       {transaction.date_heure}
@@ -185,32 +156,13 @@ console.log(portfolio)
         </div>
       </div>
       
-      {/* Modals */}
-      <AddTransactionModal
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onSuccess={() => {
-          fetcTransactions();
-          alert('Transaction ajoutée avec succès!');
-        }}
-        portfolios={portfolio}
-      />
-      
+      {/* Crypto Payment Modal */}
       <CryptoPaymentModal
         isOpen={showCryptoModal}
         onClose={() => setShowCryptoModal(false)}
         onSuccess={() => {
           fetcTransactions();
           alert('Dépôt USDT confirmé avec succès!');
-        }}
-      />
-      
-      <MomoPaymentModal
-        isOpen={showMomoModal}
-        onClose={() => setShowMomoModal(false)}
-        onSuccess={() => {
-          fetcTransactions();
-          alert('Paiement Mobile Money confirmé avec succès!');
         }}
       />
     </div>
