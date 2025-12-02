@@ -22,6 +22,8 @@ urlpatterns = [
     # Transactions d'un compte
     path('accounts/<int:compte_id>/transactions/', views.AccountTransactionsView.as_view(), name='account-transactions'),
     #l'url pour les usdt
-    path('balance/<str:address>/', views.get_wallet_balance),
-    path('verify/', views.verify_payment),
+    path('crypto/payment/init/', views.CryptoPaymentInitView.as_view(), name='crypto-payment-init'),
+    path('crypto/payment/verify/', views.CryptoPaymentVerifyView.as_view(), name='crypto-payment-verify'),
+    path('crypto/transaction/<str:transaction_id>/', views.CryptoTransactionStatusView.as_view(), name='crypto-transaction-status'),
+    path('admin/crypto/transactions/', views.AdminCryptoTransactionsView.as_view(), name='admin-crypto-transactions'),
 ]

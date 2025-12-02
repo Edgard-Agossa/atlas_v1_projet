@@ -173,6 +173,8 @@ python manage.py migrate
 python manage.py create_default_roles
 python manage.py createsuperuser
 
+🚀 Surveillance TRON démarrée
+$ python manage.py monitor_blockchain --verbose
 
 # insstallation des dépendance pour le crypto
 

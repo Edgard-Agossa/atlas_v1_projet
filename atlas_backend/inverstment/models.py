@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-
+from django.utils import timezone
 User = get_user_model()
 
 class Transaction(models.Model):
@@ -119,7 +119,8 @@ class USDTPayment(models.Model):
     
     STATUS_CHOICES = [
         ('PENDING', 'En attente'),
-        ('CONFIRMED', 'Confirmé'),
+        ('PAID', 'Payé'),
+        ('EXPIRED', 'Expiré'),
         ('FAILED', 'Échoué'),
     ]
     
@@ -130,19 +131,46 @@ class USDTPayment(models.Model):
     ]
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='usdt_payments')
+    transaction_id = models.CharField(max_length=50, unique=True)
     payment_type = models.CharField(max_length=20, choices=PAYMENT_TYPES)
     amount_usdt = models.DecimalField(max_digits=20, decimal_places=6)
     network = models.CharField(max_length=10, choices=NETWORK_CHOICES, default='TRC20')
     wallet_address = models.CharField(max_length=100)
-    tx_hash = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    # Plan d'investissement
     portfolio = models.CharField(max_length=20, choices=Transaction.PORTFOLIO_TYPES)
+    is_activated = models.BooleanField(default=False)
+
+     # Détails blockchain
+    tx_hash = models.CharField(max_length=100, blank=True, null=True)
+    received_amount = models.DecimalField(max_digits=20, decimal_places=6, blank=True, null=True)
+    sender_address = models.CharField(max_length=100, blank=True, null=True)
+     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
-    confirmed_at = models.DateTimeField(blank=True, null=True)
-    
+    confirmed_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    paid_at = models.DateTimeField(blank=True, null=True)
+    def save(self, *args, **kwargs):
+        if not self.transaction_id:
+            import uuid
+            self.transaction_id = f"USDT-{uuid.uuid4().hex[:12].upper()}"
+        super().save(*args, **kwargs)
+
+        
+        
     def __str__(self):
         return f"{self.payment_type} - {self.amount_usdt} USDT - {self.user.username}"
+class CryptoWalletConfig(models.Model):
+    network = models.CharField(max_length=10, default='TRC20', unique=True)
+    wallet_address = models.CharField(max_length=100)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
+class BlockchainMonitoring(models.Model):
+    last_checked_block = models.BigIntegerField(default=0)
+    network = models.CharField(max_length=10, default='TRC20')
+    last_check_time = models.DateTimeField(auto_now=True)
 class USDTWalletConfig(models.Model):
     network = models.CharField(max_length=10, choices=USDTPayment.NETWORK_CHOICES, unique=True)
     deposit_address = models.CharField(max_length=100)

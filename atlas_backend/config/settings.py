@@ -163,6 +163,18 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Pour le développement React
     "http://127.0.0.1:3000",
 ]
+# Configuration USDT
+USDT_CONFIG = {
+    'BUSINESS_WALLET': 'TYour-Business-Wallet-Address-Here',
+    'NETWORK': 'TRC20',
+    'CONFIRMATION_BLOCKS': 1,
+    'PAYMENT_TIMEOUT_MINUTES': 15,
+}
+
+# Celery pour tâches asynchrones
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
 
 CORS_ALLOW_CREDENTIALS = True
 

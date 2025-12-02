@@ -3,9 +3,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Sum, Count
-from .models import Transaction, Portfolio, Member, Holding
+from .models import Transaction, Portfolio, Member, Holding, USDTPayment
 from .serializers import HoldingSerializer
 from .yfinance_service import YFinanceService
+from .usdt_transaction.usdt_service import crypto_service
 #importation de la classe AccountManager
 from .account_manager.account import AccountManager
 class TransactionListCreateView(APIView):
@@ -200,7 +201,7 @@ class WithdrawView(APIView):
         try:
             compte_id = request.data.get('compte_id')
             amount = request.data.get('amount')
-            description= request.dada.get('description')
+            description= request.data.get('description')
             
             result = AccountManager.withdraw(
                 compte_id=compte_id,
@@ -355,18 +356,121 @@ class AllTransactionsView(APIView):
                 'message': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
             
-from rest_framework.decorators import api_view, permission_classes
-from .usdt_transaction.usdt_service import usdt_service   
-        
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_wallet_balance(request, address):
-    balance = usdt_service.get_usdt_balance(address)
-    return Response({'balance': str(balance)})
+#API pour le transfère usdt class CryptoPaymentInitView(APIView):
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def verify_payment(request):
-    tx_hash = request.data.get('tx_hash')
-    is_valid = usdt_service.check_transaction(tx_hash)
-    return Response({'is_valid': is_valid})
+class CryptoPaymentInitView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        try:
+            amount = request.data.get('amount')
+            if not amount or float(amount) <= 0:
+                return Response({
+                    'error': 'Montant invalide'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            result = crypto_service.create_payment_transaction(
+                user=request.user,
+                amount=amount
+            )
+            
+            return Response(result, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class CryptoPaymentVerifyView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        try:
+            transaction_id = request.data.get('transactionId')
+            tx_hash = request.data.get('txHash')
+            
+            if not transaction_id or not tx_hash:
+                return Response({
+                    'error': 'transactionId et txHash requis'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            success, message = crypto_service.process_payment(transaction_id, tx_hash)
+            
+            return Response({
+                'success': success,
+                'message': message
+            }, status=status.HTTP_200_OK if success else status.HTTP_400_BAD_REQUEST)
+            
+        except Exception as e:
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class CryptoTransactionStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, transaction_id):
+        try:
+            transaction = USDTPayment.objects.get(
+                transaction_id=transaction_id,
+                user=request.user
+            )
+            
+            return Response({
+                'transactionId': transaction.transaction_id,
+                'status': transaction.status,
+                'amount': str(transaction.amount_usdt),
+                'createdAt': transaction.created_at,
+                'expiresAt': transaction.expires_at,
+                'paidAt': transaction.paid_at,
+                'txnHash': transaction.tx_hash
+            })
+            
+        except USDTPayment.DoesNotExist:
+            return Response({
+                'error': 'Transaction non trouvée'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+class AdminCryptoTransactionsView(APIView):
+    # permission_classes = [IsAdminUser]
+    
+    def get(self, request):
+        try:
+            # Filtres
+            status_filter = request.query_params.get('status')
+            date_from = request.query_params.get('date_from')
+            date_to = request.query_params.get('date_to')
+            
+            transactions = USDTPayment.objects.all().order_by('-created_at')
+            
+            if status_filter:
+                transactions = transactions.filter(status=status_filter)
+            if date_from:
+                transactions = transactions.filter(created_at__gte=date_from)
+            if date_to:
+                transactions = transactions.filter(created_at__lte=date_to)
+            
+            data = []
+            for tx in transactions[:100]:  # Limite 100
+                data.append({
+                    'id': tx.id,
+                    'transactionId': tx.transaction_id,
+                    'user': tx.user.full_name,
+                    'amount': str(tx.amount_usdt),
+                    'status': tx.status,
+                    'createdAt': tx.created_at,
+                    'paidAt': tx.paid_at,
+                    'txnHash': tx.tx_hash,
+                    'receivedAmount': str(tx.received_amount) if tx.received_amount else None,
+                    'senderAddress': tx.sender_address
+                })
+            
+            return Response({
+                'transactions': data,
+                'total': transactions.count()
+            })
+            
+        except Exception as e:
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
