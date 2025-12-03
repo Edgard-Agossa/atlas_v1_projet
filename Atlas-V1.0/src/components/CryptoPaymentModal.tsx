@@ -10,6 +10,7 @@ import {
   QrCode,
   RefreshCw
 } from 'lucide-react';
+import {AccountService, Copyadressdeposit, Prtfolios} from '../contexts/DataUrl';
 // import QRCode from 'qrcode'; // Temporarily disabled
 import { cryptoPaymentService, PaymentResponse, PaymentStatusResponse } from '../services/cryptoPaymentService';
 
@@ -29,8 +30,10 @@ const CryptoPaymentModal: React.FC<CryptoPaymentModalProps> = ({
 }) => {
   const [step, setStep] = useState<'amount' | 'payment' | 'success'>('amount');
   const [amount, setAmount] = useState('');
-  const [portfolio, setPortfolio] = useState('PHRONESIS');
-  const [paymentData, setPaymentData] = useState<PaymentData | null>(null);
+  const [portfolio, setPortfolio] = useState<Prtfolios[]>([]);
+  //portfolio selectionné
+  const [selectedPortfolio, setSelectedPortfolio] = useState('');
+  const [paymentData, setPaymentData] = useState<Copyadressdeposit | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>({ status: 'PENDING', success: false });
   const [timeLeft, setTimeLeft] = useState(900); // 15 minutes
   const [qrCodeUrl, setQrCodeUrl] = useState('');
@@ -39,7 +42,25 @@ const CryptoPaymentModal: React.FC<CryptoPaymentModalProps> = ({
   
   const intervalRef = useRef<NodeJS.Timeout>();
   const timerRef = useRef<NodeJS.Timeout>();
+  
+  //Pour le chargement des Portfolios 
+  useEffect(() => {
+    const loadPortfolios = async () => {
+      try {
+        const data_portfolio = await AccountService.getAllPortfolios();
+    setPortfolio(Array.isArray(data_portfolio) ? data_portfolio : [])
 
+    console.log('portfolio', data_portfolio)
+
+      }catch(error) {
+        console.error('Erreur chargement portfolios:', error)
+      }
+    };
+    if(isOpen){
+      loadPortfolios();
+    
+    }
+  }, [ isOpen]);
   // Timer countdown
   useEffect(() => {
     if (step === 'payment' && timeLeft > 0) {
@@ -71,6 +92,7 @@ const CryptoPaymentModal: React.FC<CryptoPaymentModalProps> = ({
   // Generate QR Code
   useEffect(() => {
     if (paymentData) {
+
       generateQRCode();
     }
   }, [paymentData]);
@@ -81,28 +103,54 @@ const CryptoPaymentModal: React.FC<CryptoPaymentModalProps> = ({
     setQrCodeUrl('');
   };
 
+  //Noifications toast Pro
+  const [notifiction, setNotification] = useState<{message: string, type: 'error' | 'success'} | null>(null);
+  //la fonction showNotification 
+  const showNotification = (message: string, type: 'error' | 'success' = 'error') => {
+    setNotification({message, type});
+    setTimeout(()=> setNotification(null), 5000);
+  }
+
+  const [isActive, setIsActive] = useState(false)
   const initializePayment = async () => {
     if (!amount || parseFloat(amount) < 10) {
-      alert('Montant minimum: 10 USDT');
+
+      showNotification('Montant minimum: 10 USDT');
+      return;
+    }
+    if (!selectedPortfolio){
+      setIsActive(false)
+      showNotification('Veuillez sélectionner un portefeuille');
       return;
     }
 
+    console.log('selectedPortfolio', selectedPortfolio)
+    //vérifier si le porfolio est sélectionné 
+    setIsActive(true)
     setLoading(true);
     try {
-      const data = await cryptoPaymentService.initiateDeposit({
-        amount: parseFloat(amount),
-        portfolio: portfolio as 'PHRONESIS' | 'FLAGSHIP'
-      });
-      
-      if (data.success) {
-        setPaymentData(data);
+      const data = await AccountService.payWithUSDT(parseFloat(amount), selectedPortfolio);
+
+      if (data.transactionId ) {
+        setPaymentData({
+          success: true,
+          transactionId: data.transactionId,
+          amount: data.amount,
+          network: data.network,
+          walletAddress: data.walletAddress,
+          expiresAt: data.expiresAt,
+          status: data.status,
+          porfolio: data.porfolio
+        });
         setStep('payment');
         setTimeLeft(900);
       } else {
-        alert(data.message || 'Erreur lors de l\'initialisation');
+        console.error('❌ Réponse invalide:', data);
+        // alert(data.message || 'Erreur lors de l\'initialisation');
       }
     } catch (error) {
-      alert('Erreur réseau');
+      console.error('❌ Erreur complète:', error);
+      showNotification('Erreur réseau');
     } finally {
       setLoading(false);
     }
@@ -112,7 +160,7 @@ const CryptoPaymentModal: React.FC<CryptoPaymentModalProps> = ({
     if (!paymentData) return;
 
     try {
-      const data = await cryptoPaymentService.checkPaymentStatus(paymentData.payment_id);
+      const data = await cryptoPaymentService.checkPaymentStatus(paymentData.transactionId);
       
       if (data.success) {
         setPaymentStatus(data);
@@ -158,6 +206,7 @@ const CryptoPaymentModal: React.FC<CryptoPaymentModalProps> = ({
   return (
     <AnimatePresence>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -176,6 +225,18 @@ const CryptoPaymentModal: React.FC<CryptoPaymentModalProps> = ({
               <X className="w-5 h-5" />
             </button>
           </div>
+{/* Notification Toast */}
+      {notifiction && (
+        <motion.div 
+          initial={{opacity: 0, y: -50}}
+          animate={{opacity: 1, y: 0}}
+          exit={{opacity: 0, y: -50}}
+          className={`absolute top-4 left-6 right-6 p-3 rounded-lg flex items-center space-x-2 text-sm ${
+      notifiction?.type === 'error' ? 'bg-red-50 border border-red-200 text-red-800': 'bg-green-50 border border-green-200 text-green-800'
+    }`}>
+    <AlertCircle className="w-4 h-4"/>
+          <span className='font-medium'>{notifiction?.message}</span>
+        </motion.div>)}
 
           {/* Content */}
           <div className="p-6">
@@ -204,12 +265,14 @@ const CryptoPaymentModal: React.FC<CryptoPaymentModalProps> = ({
                     Portefeuille
                   </label>
                   <select
-                    value={portfolio}
-                    onChange={(e) => setPortfolio(e.target.value)}
+                    value={selectedPortfolio}
+                    onChange={(e) => setSelectedPortfolio(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
-                    <option value="PHRONESIS">Phronesis (Passif)</option>
-                    <option value="FLAGSHIP">FlagShip (Actif)</option>
+                    <option value="">Sélectionner un portefeuille</option>
+                    {portfolio.map((item) => (
+                      <option key={item.id} value={item.type}> {item.type} </option>
+                    ))}
                   </select>
                 </div>
 
@@ -222,7 +285,7 @@ const CryptoPaymentModal: React.FC<CryptoPaymentModalProps> = ({
                   </button>
                   <button
                     onClick={initializePayment}
-                    disabled={loading || !amount || parseFloat(amount) < 10}
+                    disabled={loading || isActive }
                     className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
                   >
                     {loading ? (
@@ -261,7 +324,7 @@ const CryptoPaymentModal: React.FC<CryptoPaymentModalProps> = ({
                 <div className="space-y-4">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {paymentData.amount_usdt} USDT
+                      {paymentData.amount} USDT
                     </p>
                     <p className="text-sm text-gray-500">Réseau: TRC20 (Tron)</p>
                   </div>
@@ -285,12 +348,12 @@ const CryptoPaymentModal: React.FC<CryptoPaymentModalProps> = ({
                     <div className="flex items-center space-x-2">
                       <input
                         type="text"
-                        value={paymentData.deposit_address}
+                        value={paymentData.walletAddress}
                         readOnly
                         className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-mono"
                       />
                       <button
-                        onClick={() => copyToClipboard(paymentData.deposit_address)}
+                        onClick={() => copyToClipboard(paymentData.walletAddress)}
                         className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                       >
                         {copied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -338,7 +401,7 @@ const CryptoPaymentModal: React.FC<CryptoPaymentModalProps> = ({
                     Paiement Confirmé!
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Votre dépôt de {paymentData?.amount_usdt} USDT a été confirmé.
+                    Votre dépôt de {paymentData?.amount} USDT a été confirmé.
                   </p>
                   <p className="text-sm text-gray-500 mt-2">
                     Redirection automatique dans 3 secondes...

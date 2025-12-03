@@ -24,7 +24,7 @@ class TronUSDTService:
                 self._business_wallet = "TYour-Business-Wallet-Address"
         return self._business_wallet
     
-    def create_payment_transaction(self, user, amount):
+    def create_payment_transaction(self, user, amount, portfolio):
         """Créer une nouvelle transaction de paiement"""
         expires_at = timezone.now() + timedelta(minutes = 15)
         
@@ -34,7 +34,7 @@ class TronUSDTService:
             amount_usdt=amount,
             wallet_address=self.business_wallet,
             expires_at=expires_at,
-            portfolio='PHRONESIS'  # par défaut
+            portfolio=portfolio  # par défaut
         )
         return {
             'transactionId': transaction.transaction_id,
@@ -42,7 +42,8 @@ class TronUSDTService:
             'network': 'TRC20',
             'walletAddress': transaction.wallet_address,
             'expiresAt': transaction.expires_at.isoformat(),
-            'status': transaction.status
+            'portfolio': transaction.portfolio,
+            'status': transaction.status,
         }
         
     def check_wallet_transactions(self):

@@ -1,3 +1,5 @@
+import { PortfolioType } from "../types";
+
 // Configuration API
 const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
@@ -29,6 +31,7 @@ interface ApiResponse<T> {
     accounts?: T[];
     transactions?: T[];
     portfolios?: T[];
+    copyadressdeposit?: T[];
 }
 
 export interface Prtfolios {
@@ -40,6 +43,20 @@ export interface Prtfolios {
     created_by: string;
     created_at: string;
 
+
+}
+
+export interface Copyadressdeposit {
+    success: boolean;
+    transactionId: string;
+    amount: string;
+    network: string;
+    walletAddress: string;
+    porfolio: string;
+
+    expiresAt: string;  // Ajoutez ça
+    status: 'PENDING';
+    
 }
 //service API pour les compts
 export class AccountService {
@@ -120,6 +137,29 @@ export class AccountService {
     });
     return resp.json()
   }
+
+  //GÉNÉRATION DE LA TRANSACTION
+static async payWithUSDT(amount: number, choixPortfolio: string): Promise<Copyadressdeposit> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/investment/crypto/payment/init/`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ amount: amount, portfolio: choixPortfolio })
+    });
+console.log('Envoi:', { amount: amount, Portfolio: choixPortfolio });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const paymentData = await response.json();
+    console.log('paiement', paymentData);
+    return paymentData;
+  } catch (error) {
+    console.error('Erreur lors du paiement USDT:', error);
+    throw error;
+  }
+}
+
 
 
 

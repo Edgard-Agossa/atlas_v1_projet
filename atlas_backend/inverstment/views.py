@@ -364,6 +364,9 @@ class CryptoPaymentInitView(APIView):
     def post(self, request):
         try:
             amount = request.data.get('amount')
+            portfolio = request.data.get('portfolio')
+            print(f"DEBUG: amount={amount}, portfolio={portfolio}") 
+            
             if not amount or float(amount) <= 0:
                 return Response({
                     'error': 'Montant invalide'
@@ -371,7 +374,8 @@ class CryptoPaymentInitView(APIView):
             
             result = crypto_service.create_payment_transaction(
                 user=request.user,
-                amount=amount
+                amount=amount,
+                portfolio= portfolio
             )
             
             return Response(result, status=status.HTTP_201_CREATED)
