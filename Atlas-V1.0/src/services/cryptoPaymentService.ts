@@ -18,7 +18,8 @@ export interface PaymentResponse {
 
 export interface PaymentStatusResponse {
   success: boolean;
-  status: 'PENDING' | 'CONFIRMED' | 'FAILED';
+  transactionId: string;
+  status: 'PENDING' | 'PAID' | 'FAILED';
   tx_hash?: string;
   amount_received?: string;
   confirmed_at?: string;
@@ -55,13 +56,15 @@ class CryptoPaymentService {
     }
   }
 
+//Fonction pour aller vérifier le status du paiement pour la confirmation en retour 
   async checkPaymentStatus(paymentId: string): Promise<PaymentStatusResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/investment/usdt/status/${paymentId}/`, {
+      const response = await fetch(`${API_BASE_URL}/investment/crypto/transaction/${paymentId}/`, {
         headers: this.getAuthHeaders()
       });
 
       const data = await response.json();
+      console.log('Status check:', data);
       
       if (!response.ok) {
         throw new Error(data.message || 'Erreur lors de la vérification du statut');

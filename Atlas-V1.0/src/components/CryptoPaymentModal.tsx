@@ -28,13 +28,13 @@ const CryptoPaymentModal: React.FC<CryptoPaymentModalProps> = ({
   onClose, 
   onSuccess 
 }) => {
-  const [step, setStep] = useState<'amount' | 'payment' | 'success'>('amount');
+  const [step, setStep] = useState<'amount' | 'paid' | 'success'>('amount');
   const [amount, setAmount] = useState('');
   const [portfolio, setPortfolio] = useState<Prtfolios[]>([]);
   //portfolio selectionné
   const [selectedPortfolio, setSelectedPortfolio] = useState('');
   const [paymentData, setPaymentData] = useState<Copyadressdeposit | null>(null);
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>({ status: 'PENDING', success: false });
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>({ status: 'PENDING', success: false, transactionId: '' });
   const [timeLeft, setTimeLeft] = useState(900); // 15 minutes
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -63,7 +63,7 @@ const CryptoPaymentModal: React.FC<CryptoPaymentModalProps> = ({
   }, [ isOpen]);
   // Timer countdown
   useEffect(() => {
-    if (step === 'payment' && timeLeft > 0) {
+    if (step === 'paid' && timeLeft > 0) {
       timerRef.current = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
@@ -81,7 +81,7 @@ const CryptoPaymentModal: React.FC<CryptoPaymentModalProps> = ({
 
   // Status polling
   useEffect(() => {
-    if (step === 'payment' && paymentData) {
+    if (step === 'paid' && paymentData) {
       intervalRef.current = setInterval(checkPaymentStatus, 5000);
     }
     return () => {
@@ -142,7 +142,7 @@ const CryptoPaymentModal: React.FC<CryptoPaymentModalProps> = ({
           status: data.status,
           porfolio: data.porfolio
         });
-        setStep('payment');
+        setStep('paid');
         setTimeLeft(900);
       } else {
         console.error('❌ Réponse invalide:', data);
@@ -161,11 +161,15 @@ const CryptoPaymentModal: React.FC<CryptoPaymentModalProps> = ({
 
     try {
       const data = await cryptoPaymentService.checkPaymentStatus(paymentData.transactionId);
+      console.log('datacheckPaymentStatus', data)
       
-      if (data.success) {
+      if (data.transactionId) {
         setPaymentStatus(data);
+        console.log('data.success', data.transactionId)
         
-        if (data.status === 'CONFIRMED') {
+        if (data.status === 'PAID') {
+          console.log('dataStatus', data.status)
+
           setStep('success');
           setTimeout(() => {
             onSuccess();
@@ -196,7 +200,7 @@ const CryptoPaymentModal: React.FC<CryptoPaymentModalProps> = ({
     setStep('amount');
     setAmount('');
     setPaymentData(null);
-    setPaymentStatus({ success: true, status: 'PENDING' });
+    setPaymentStatus({ success: true, status: 'PENDING', transactionId: '' });
     setTimeLeft(900);
     onClose();
   };
@@ -301,7 +305,7 @@ const CryptoPaymentModal: React.FC<CryptoPaymentModalProps> = ({
               </motion.div>
             )}
 
-            {step === 'payment' && paymentData && (
+            {step === 'paid' && paymentData && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -370,7 +374,7 @@ const CryptoPaymentModal: React.FC<CryptoPaymentModalProps> = ({
                           <span className="text-blue-800 dark:text-blue-200">En attente de paiement...</span>
                         </>
                       )}
-                      {paymentStatus.status === 'CONFIRMED' && (
+                      {paymentStatus.status === 'PAID' && (
                         <>
                           <CheckCircle className="w-5 h-5 text-green-600" />
                           <span className="text-green-800 dark:text-green-200">Paiement confirmé!</span>

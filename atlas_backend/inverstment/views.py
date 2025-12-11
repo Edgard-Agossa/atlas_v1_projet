@@ -35,6 +35,7 @@ class TransactionListCreateView(APIView):
         required_fields = ['type', 'date', 'portfolio', 'amount']
 
         for field in required_fields:
+            print(f"Field: {field}, Value: {data.get(field)}")
             if field not in data:
                 return Response({
                     'error': f'Le champ {field} est requis'

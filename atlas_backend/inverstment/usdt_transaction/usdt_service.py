@@ -34,7 +34,7 @@ class TronUSDTService:
             amount_usdt=amount,
             wallet_address=self.business_wallet,
             expires_at=expires_at,
-            portfolio=portfolio  # par défaut
+            portfolio=portfolio  
         )
         return {
             'transactionId': transaction.transaction_id,
