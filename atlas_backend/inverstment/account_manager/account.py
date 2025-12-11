@@ -168,6 +168,7 @@ class AccountManager:
         
     @staticmethod
     def get_member_accounts(member_id):
+        
         """Récupérer tous les comptes d'un membre donné."""
         if member_id is None:
             raise ValueError("L'identifiant du membre ne peut pas être nul.")

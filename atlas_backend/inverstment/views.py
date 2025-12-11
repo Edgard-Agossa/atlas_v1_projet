@@ -222,14 +222,16 @@ class MemberAccountsView(APIView):
     
     def get(self, request, member_id):
         try:
+            print(f"DEBUG: Recherche comptes pour member_id={member_id}")
             accounts = AccountManager.get_member_accounts(member_id)
+            print(f"DEBUG: Nombre de comptes trouvés: {len(accounts)}")
             return Response({
                 'success': True,
                 'accounts': [
                     {
                         'id': acc.id,
                         'account_number': acc.account_number,
-                        'balance': acc.balance,
+                        'balance':  float(acc.balance),
                         'portfolio': acc.portfolio.name,
                         'portfolio_type': acc.portfolio.type,
                         'is_active': acc.is_active
@@ -237,6 +239,10 @@ class MemberAccountsView(APIView):
                 ]
             }, status=status.HTTP_200_OK)
         except Exception as e:
+            print(f"DEBUG: Erreur complète: {str(e)}")
+            print(f"DEBUG: Type d'erreur: {type(e)}")
+            import traceback
+            print(f"DEBUG: Traceback: {traceback.format_exc()}")
             return Response({
                 'success': False,
                 'message': str(e)
