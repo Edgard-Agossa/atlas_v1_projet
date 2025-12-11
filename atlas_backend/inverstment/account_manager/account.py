@@ -6,8 +6,64 @@ from decimal import Decimal
 
 
 class AccountManager:
+#     @staticmethod
+#     def deposit(compte_id,amount, member_id=None,portfolio=None, description=None, created_by=None):
+#         """Effectuer un dépôt sur le compte membre"""
+#         if amount is None or amount <= 0:
+#             raise ValueError("Le montant du dépôt doit être supérieur à zéro.")
+        
+#         with transaction.atomic():
+#             compte = None
+            
+#             #si portfolio est spécifié, chercher le compte correspondant
+            
+#             # Essayer de récupérer le compte existant
+#             if portfolio and compte_id:
+#                 try:
+#                     portfolio_obj = Portfolio.objects.get(type=portfolio)
+#                     compte = Compte_member.objects.select_for_update().get(id=compte_id, portfolio=portfolio_obj)
+#                 except (Portfolio.DoesNotExist, Compte_member.DoesNotExist):
+#                     compte = None
+            
+#             # Si le compte n'existe pas, le créer
+#             if compte is None:
+#                 if member_id is None:
+#                     raise ValueError("Le membre doit être spécifié pour créer un nouveau compte.")
+                
+#                 # Créer les comptes pour le membre
+#                 result = AccountManager.creat_member_account(member_id)
+#                 if result['created_accounts']:
+#                     compte = result['created_accounts'][0]  # Prendre le premier compte créé
+#                 else:
+#                     # Si aucun compte créé, essayer de récupérer un compte existant
+#                     existing_accounts = AccountManager.get_member_accounts(member_id)
+#                     if existing_accounts:
+#                         compte = existing_accounts[0]
+#                     else:
+#                         raise ValueError("Impossible de créer ou trouver un compte pour ce membre.")
+            
+#             # Effectuer le dépôt
+#             compte.balance += Decimal(str(amount))
+#             compte.save()
+            
+#             Transaction.objects.create(
+#                 type='DEPOSIT',
+#                 date=timezone.now().date(),
+#                 portfolio=compte.portfolio.type,
+#                 amount=amount,
+#                 member_id=str(compte.member.id),
+#                 sender=created_by,
+#                 receiver=compte.member,
+#                 description=description or f"Dépôt sur compte {compte.account_number}"
+#             )
+            
+#             return {
+#                 'success': True,
+#                 'message': f"Dépôt de {amount}€ effectué avec succès",
+#                 'new_balance': float(compte.balance)
+#             }
     @staticmethod
-    def deposit(compte_id,amount, member_id=None, description=None, created_by=None):
+    def deposit(compte_id, amount, member_id=None, portfolio=None, description=None, created_by=None):
         """Effectuer un dépôt sur le compte membre"""
         if amount is None or amount <= 0:
             raise ValueError("Le montant du dépôt doit être supérieur à zéro.")
@@ -15,29 +71,32 @@ class AccountManager:
         with transaction.atomic():
             compte = None
             
-            # Essayer de récupérer le compte existant
-            if compte_id:
+            # Si portfolio spécifié, chercher le compte correspondant
+            if portfolio and member_id:
+                try:
+                    portfolio_obj = Portfolio.objects.get(type=portfolio)
+                    compte = Compte_member.objects.select_for_update().get(
+                        member_id=member_id, 
+                        portfolio=portfolio_obj
+                    )
+                except (Portfolio.DoesNotExist, Compte_member.DoesNotExist):
+                    # Créer le compte s'il n'existe pas
+                    user = User.objects.get(id=member_id)
+                    compte = Compte_member.objects.create(
+                        member=user,
+                        portfolio=portfolio_obj,
+                        balance=0
+                    )
+            
+            # Si pas de portfolio spécifié, utiliser la logique existante
+            elif compte_id:
                 try:
                     compte = Compte_member.objects.select_for_update().get(id=compte_id)
                 except Compte_member.DoesNotExist:
                     compte = None
             
-            # Si le compte n'existe pas, le créer
             if compte is None:
-                if member_id is None:
-                    raise ValueError("Le membre doit être spécifié pour créer un nouveau compte.")
-                
-                # Créer les comptes pour le membre
-                result = AccountManager.creat_member_account(member_id)
-                if result['created_accounts']:
-                    compte = result['created_accounts'][0]  # Prendre le premier compte créé
-                else:
-                    # Si aucun compte créé, essayer de récupérer un compte existant
-                    existing_accounts = AccountManager.get_member_accounts(member_id)
-                    if existing_accounts:
-                        compte = existing_accounts[0]
-                    else:
-                        raise ValueError("Impossible de créer ou trouver un compte pour ce membre.")
+                raise ValueError("Impossible de trouver ou créer le compte.")
             
             # Effectuer le dépôt
             compte.balance += Decimal(str(amount))

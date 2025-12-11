@@ -147,7 +147,7 @@ static async payWithUSDT(amount: number, choixPortfolio: string): Promise<Copyad
       headers: this.getAuthHeaders(),
       body: JSON.stringify({ amount: amount, portfolio: choixPortfolio })
     });
-console.log('Envoi:', { amount: amount, Portfolio: choixPortfolio });
+  console.log('Envoi:', { amount: amount, Portfolio: choixPortfolio });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -163,6 +163,14 @@ console.log('Envoi:', { amount: amount, Portfolio: choixPortfolio });
 
 
 
+//Récupérer la somme totale de chaque comptes a chaque utilisateur connecter
+static async getTotalBalancesOfAuth(memberId: number): Promise<ApiResponse<Account>> {
+  const response = await fetch(`${API_BASE_URL}/investment/accounts/${memberId}/total_balances/`,{
+      headers: this.getAuthHeaders()
+  });
+  return response.json();
+
+}
 
 }
 

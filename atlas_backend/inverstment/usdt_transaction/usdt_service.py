@@ -172,6 +172,7 @@ class TronUSDTService:
                 compte_id=None,
                 amount=float(transaction.received_amount),
                 member_id=transaction.user.id,
+                portfolio=transaction.portfolio,
                 description=f"Dépôt USDT - {transaction.transaction_id}"
             )
             
