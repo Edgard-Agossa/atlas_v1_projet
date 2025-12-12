@@ -44,8 +44,22 @@ class RegisterView(APIView):
                 created_by=request.user if request.user.is_authenticated else None
             )
 
+            # ✅ Créer automatiquement les comptes après inscription
+            try:
+                from inverstment.account_manager.account import AccountManager
+                AccountManager.creat_member_account(user.id)
+                print(f"Comptes créés automatiquement pour l'utilisateur {user.id}")
+            except Exception as account_error:
+                print(f"Erreur création comptes (non bloquante): {account_error}")
+
+            # Générer les tokens JWT pour connexion automatique
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+
             return Response({
                 'message': 'Utilisateur créé avec succès',
+                'access_token': access_token,
+                'refresh_token': str(refresh),
                 'user': {
                     'id': user.id,
                     'first_name': user.first_name,
@@ -60,6 +74,7 @@ class RegisterView(APIView):
             return Response({
                 'error': f'Erreur lors de la création: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class LoginView(APIView):
     permission_classes = [AllowAny]

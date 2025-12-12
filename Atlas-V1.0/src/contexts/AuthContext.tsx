@@ -100,53 +100,113 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // const register = async (userData: RegisterData): Promise<{ success: boolean; error?: string }> => {
+  //   setIsLoading(true);
+
+  //   try {
+  //     const response = await fetch(`${API_BASE_URL}/auth/register/`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         first_name: userData.firstName,
+  //         last_name: userData.lastName,
+  //         email: userData.email,
+  //         password: userData.password,
+  //         phone: userData.phone,
+  //       }),
+  //     });
+
+  //     const data = await response.json();
+
+  //     if (response.ok) {
+  //       const newUser: User = {
+  //         id: data.user.id.toString(),
+  //         email: data.user.email,
+  //         firstName: data.user.first_name,
+  //         lastName: data.user.last_name,
+  //         role: data.user.role,
+  //         avatar: data.user.avatar,
+  //         phone: data.user.phone,
+  //         join_date: data.user.join_date,
+  //       };
+          
+  //       setUser(newUser);
+  //       localStorage.setItem('phronesis_user', JSON.stringify(newUser));
+  //       localStorage.setItem('token', data.access_token); // Stocker le token JWT
+  //       setIsLoading(false);
+  //       return { success: true };
+  //     } else {
+  //       setIsLoading(false);
+  //       return { success: false, error: data.error || 'Erreur lors de l\'inscription' };
+  //     }
+  //   } catch (error) {
+  //     console.error('Erreur lors de l\'inscription:', error);
+  //     setIsLoading(false);
+  //     return { success: false, error: 'Erreur réseau. Vérifiez que le serveur backend est démarré.' };
+  //   }
+  // };
+
+
+
   const register = async (userData: RegisterData): Promise<{ success: boolean; error?: string }> => {
-    setIsLoading(true);
+  setIsLoading(true);
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/register/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          first_name: userData.firstName,
-          last_name: userData.lastName,
-          email: userData.email,
-          password: userData.password,
-          phone: userData.phone,
-        }),
-      });
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/register/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        first_name: userData.firstName,
+        last_name: userData.lastName,
+        email: userData.email,
+        password: userData.password,
+        phone: userData.phone,
+      }),
+    });
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (response.ok) {
-        const newUser: User = {
-          id: data.user.id.toString(),
-          email: data.user.email,
-          firstName: data.user.first_name,
-          lastName: data.user.last_name,
-          role: data.user.role,
-          avatar: data.user.avatar,
-          phone: data.user.phone,
-          join_date: data.user.join_date,
-        };
+    if (response.ok) {
+      const newUser: User = {
+        id: data.user.id.toString(),
+        email: data.user.email,
+        firstName: data.user.first_name,
+        lastName: data.user.last_name,
+        role: data.user.role,
+        avatar: data.user.avatar,
+        phone: data.user.phone,
+        join_date: data.user.join_date,
+      };
 
-        setUser(newUser);
-        localStorage.setItem('phronesis_user', JSON.stringify(newUser));
-        localStorage.setItem('token', data.access_token); // Stocker le token JWT
-        setIsLoading(false);
-        return { success: true };
-      } else {
-        setIsLoading(false);
-        return { success: false, error: data.error || 'Erreur lors de l\'inscription' };
+      setUser(newUser);
+      localStorage.setItem('phronesis_user', JSON.stringify(newUser));
+      localStorage.setItem('token', data.access_token);
+
+      // ✅ Créer automatiquement les comptes après inscription
+      try {
+        const { AccountService } = await import('./DataUrl');
+        await AccountService.createMemberAccounts(parseInt(newUser.id));
+        console.log('Comptes créés automatiquement pour le nouvel utilisateur');
+      } catch (accountError) {
+        console.warn('Erreur création comptes (non bloquante):', accountError);
       }
-    } catch (error) {
-      console.error('Erreur lors de l\'inscription:', error);
+
       setIsLoading(false);
-      return { success: false, error: 'Erreur réseau. Vérifiez que le serveur backend est démarré.' };
+      return { success: true };
+    } else {
+      setIsLoading(false);
+      return { success: false, error: data.error || 'Erreur lors de l\'inscription' };
     }
-  };
+  } catch (error) {
+    console.error('Erreur lors de l\'inscription:', error);
+    setIsLoading(false);
+    return { success: false, error: 'Erreur réseau. Vérifiez que le serveur backend est démarré.' };
+  }
+};
 
   const logout = () => {
     setUser(null);
