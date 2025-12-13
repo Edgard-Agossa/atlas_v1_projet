@@ -19,3 +19,4 @@ tzdata==2025.2
 urllib3==2.5.0
 celery==5.3.4
 redis==5.0.1
+fedapay==1.0.0

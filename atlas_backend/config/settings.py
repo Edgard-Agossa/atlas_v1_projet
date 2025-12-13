@@ -179,3 +179,12 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 CORS_ALLOW_CREDENTIALS = True
 
 AUTH_USER_MODEL = 'authentication.User'
+
+FEDAPAY_CONFIG = {
+    'PUBLIC_KEY': config('FEDAPAY_PUBLIC_KEY'),
+    'SECRET_KEY': config('FEDAPAY_SECRET_KEY'),
+    'ENVIRONMENT': config('FEDAPAY_ENV', default='sandbox'),  # 'sandbox' ou 'production
+    'WEBHOOK_SECRET': config('FEDAPAY_WEBHOOK_SECRET'),
+}
+
+BASE_URL = config('BASE_URL', default='http://127.0.0.1:8000')

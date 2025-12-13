@@ -26,4 +26,8 @@ urlpatterns = [
     path('crypto/payment/verify/', views.CryptoPaymentVerifyView.as_view(), name='crypto-payment-verify'),
     path('crypto/transaction/<str:transaction_id>/', views.CryptoTransactionStatusView.as_view(), name='crypto-transaction-status'),
     path('admin/crypto/transactions/', views.AdminCryptoTransactionsView.as_view(), name='admin-crypto-transactions'),
+        # Mobile Money
+    path('mobile-money/payment/init/', views.MobileMoneyPaymentInitView.as_view(), name='mobile-money-init'),
+    path('mobile-money/webhook/', views.MobileMoneyWebhookView.as_view(), name='mobile-money-webhook'),
+    path('mobile-money/transaction/<str:transaction_id>/', views.MobileMoneyStatusView.as_view(), name='mobile-money-status'),
 ]

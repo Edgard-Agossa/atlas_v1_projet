@@ -1,9 +1,9 @@
 from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated,AllowAny
 from django.db.models import Sum, Count
-from .models import Transaction, Portfolio, Member, Holding, USDTPayment
+from .models import Transaction, Portfolio, Member, Holding, USDTPayment, MobileMoneyPayment
 from .serializers import HoldingSerializer
 from .yfinance_service import YFinanceService
 from .usdt_transaction.usdt_service import crypto_service
@@ -485,3 +485,132 @@ class AdminCryptoTransactionsView(APIView):
             return Response({
                 'error': str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+            
+
+#pour le paiement par mobile money via fedapay
+from .mobile_money.fedapay_service import fedapay_service
+
+class MobileMoneyPaymentInitView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        signature = request.headers.get('X-FedaPay-Signature')
+        try:
+            amount = request.data.get('amount')
+            phone_number = request.data.get('phone_number')
+            payment_method = request.data.get('payment_method')
+            portfolio = request.data.get('portfolio')
+            
+            # Validation
+            if not all([amount, phone_number, payment_method, portfolio]):
+                return Response({
+                    'error': 'Tous les champs sont requis'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            if float(amount) <= 0:
+                return Response({
+                    'error': 'Montant invalide'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            result = fedapay_service.create_transaction(
+                user=request.user,
+                amount=float(amount),
+                phone_number=phone_number,
+                payment_method=payment_method,
+                portfolio=portfolio
+            )
+            
+            if result['success']:
+                return Response(result, status=status.HTTP_201_CREATED)
+            else:
+                return Response({
+                    'error': result['error']
+                }, status=status.HTTP_400_BAD_REQUEST)
+                
+        except Exception as e:
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+import hmac
+import hashlib
+from django.conf import settings
+
+
+class MobileMoneyWebhookView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        # 1. Validation signature
+        signature = request.headers.get('X-FedaPay-Signature')
+        if not signature:
+            return Response({'error': 'Signature manquante'}, status=400)
+        
+        try:
+            # 2. Vérifier signature
+            payload = request.body
+            expected = hmac.new(
+                settings.FEDAPAY_CONFIG['WEBHOOK_SECRET'].encode(),
+                payload,
+                hashlib.sha256
+            ).hexdigest()
+            
+            if not hmac.compare_digest(signature, expected):
+                return Response({'error': 'Signature invalide'}, status=401)
+            
+            # 3. Validation des données (FIX CWE-915)
+            event_type = request.data.get('type')
+            entity = request.data.get('entity', {})
+            transaction_id = entity.get('id')
+            
+            if not all([event_type, transaction_id]):
+                return Response({'error': 'Données incomplètes'}, status=400)
+            
+            # 4. Traitement sécurisé
+            if event_type == 'transaction.approved':
+                try:
+                    payment = MobileMoneyPayment.objects.get(
+                        fedapay_transaction_id=transaction_id
+                    )
+                    payment.status = 'APPROVED'
+                    payment.save()
+                    
+                    fedapay_service.process_successful_payment(payment)
+                    
+                except MobileMoneyPayment.DoesNotExist:
+                    return Response({'error': 'Transaction introuvable'}, status=404)
+            
+            return Response({'status': 'success'})
+            
+        # 5. Gestion d'erreurs spécifiques (FIX Error Handling)
+        except (KeyError, ValueError) as e:
+            return Response({'error': 'Données invalides'}, status=400)
+        except Exception:
+            return Response({'error': 'Erreur serveur'}, status=500)
+
+class MobileMoneyStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, transaction_id):
+        try:
+            payment = MobileMoneyPayment.objects.get(
+                transaction_id=transaction_id,
+                user=request.user
+            )
+            
+            return Response({
+                'transaction_id': payment.transaction_id,
+                'status': payment.status,
+                'amount': str(payment.amount),
+                'payment_method': payment.payment_method,
+                'phone_number': payment.phone_number,
+                'portfolio': payment.portfolio,
+                'created_at': payment.created_at,
+                'updated_at': payment.updated_at,
+                'fedapay_reference': payment.fedapay_reference
+            })
+            
+        except MobileMoneyPayment.DoesNotExist:
+            return Response({
+                'error': 'Transaction non trouvée'
+            }, status=status.HTTP_404_NOT_FOUND)

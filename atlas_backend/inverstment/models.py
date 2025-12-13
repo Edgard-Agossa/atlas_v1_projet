@@ -177,3 +177,41 @@ class USDTWalletConfig(models.Model):
     private_key = models.CharField(max_length=200)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+# Modèle pour les paiements Mobile Money via Fedapay et leurs retours d'erreur 
+class MobileMoneyPayment(models.Model):
+    PAYMENT_METHODS =[
+        ('mtn', 'MTN Mobile Money'),
+        ('moov', 'Moov Money'),
+        ('orange', 'Orange Money'),
+        
+    ]
+    STATUS_CHOICES = [
+        ('PENDING', 'En attente'),
+        ('APPROVED', 'Approuvé'),
+        ('DECLINED', 'Refusé'),
+        ('CANCELED', 'Annulé'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    transaction_id = models.CharField(max_length=50, unique=True)
+    fedapay_transction_id = models.CharField(max_length=100, blank=True)
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    currency = models.CharField(max_length=10, default='XOF')
+    payment_method = models.CharField(max_length=10, choices=PAYMENT_METHODS)
+    phone_number = models.CharField(max_length=20)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    portfolio = models.CharField(max_length=20, choices=Transaction.PORTFOLIO_TYPES)
+    is_activated = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    #Métadonnées FedaPay
+    fedapay_reference = models.CharField(max_length=100, blank=True)
+    callback_url = models.URLField(blank=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.transaction_id:
+            import uuid
+            self.transaction_id = f"MM-{uuid.uuid4().hex[:12].upper()}"
+        super().save(*args, **kwargs)
+    
