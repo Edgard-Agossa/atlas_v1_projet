@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { motion } from 'framer-motion';
 
 const Analytics: React.FC = () => {
   const [activeTab, setActiveTab] = useState('Combined');
@@ -66,16 +67,43 @@ const Analytics: React.FC = () => {
   const currentData = portfolioData[activeTab as keyof typeof portfolioData];
 
   return (
-    <div className="p-6">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="p-6"
+    >
       {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-300 mb-4">Detailed Asset Allocation</h2>
+      <motion.div 
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.05 }}
+        className="mb-6"
+      >
+        <motion.h2 
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="text-xl font-semibold text-gray-300 mb-4"
+        >
+          Detailed Asset Allocation
+        </motion.h2>
         
         {/* Tabs */}
-        <div className="flex space-x-2">
-          {['Combined', 'Phronesis', 'FlagShip'].map((tab) => (
-            <button
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.15 }}
+          className="flex space-x-2"
+        >
+          {['Combined', 'Phronesis', 'FlagShip'].map((tab, index) => (
+            <motion.button
               key={tab}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3, delay: 0.2 + index * 0.05 }}
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
                 activeTab === tab
@@ -84,16 +112,34 @@ const Analytics: React.FC = () => {
               }`}
             >
               {tab}
-            </button>
+            </motion.button>
           ))}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <motion.div 
+        initial={{ y: 30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.35 }}
+        className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+      >
         {/* By Sector */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg p-6 border border-gray-200 dark:border-slate-700">
-          <h3 className="text-gray-900 dark:text-gray-300 text-lg font-semibold mb-4">By Sector</h3>
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.4 }}
+          whileHover={{ scale: 1.02, y: -5 }}
+          className="bg-white dark:bg-slate-800 rounded-lg p-6 border border-gray-200 dark:border-slate-700 shadow-lg hover:shadow-xl transition-shadow"
+        >
+          <motion.h3 
+            initial={{ x: -10, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.45 }}
+            className="text-gray-900 dark:text-gray-300 text-lg font-semibold mb-4"
+          >
+            By Sector
+          </motion.h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={currentData.sector} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -127,11 +173,24 @@ const Analytics: React.FC = () => {
               />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </motion.div>
 
         {/* By Geography */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg p-6 border border-gray-200 dark:border-slate-700">
-          <h3 className="text-gray-900 dark:text-gray-300 text-lg font-semibold mb-4">By Geography</h3>
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.5 }}
+          whileHover={{ scale: 1.02, y: -5 }}
+          className="bg-white dark:bg-slate-800 rounded-lg p-6 border border-gray-200 dark:border-slate-700 shadow-lg hover:shadow-xl transition-shadow"
+        >
+          <motion.h3 
+            initial={{ x: -10, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.55 }}
+            className="text-gray-900 dark:text-gray-300 text-lg font-semibold mb-4"
+          >
+            By Geography
+          </motion.h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={currentData.geography} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -165,11 +224,24 @@ const Analytics: React.FC = () => {
               />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </motion.div>
 
         {/* By Asset Type */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg p-6 border border-gray-200 dark:border-slate-700">
-          <h3 className="text-gray-900 dark:text-gray-300 text-lg font-semibold mb-4">By Asset Type</h3>
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.6 }}
+          whileHover={{ scale: 1.02, y: -5 }}
+          className="bg-white dark:bg-slate-800 rounded-lg p-6 border border-gray-200 dark:border-slate-700 shadow-lg hover:shadow-xl transition-shadow"
+        >
+          <motion.h3 
+            initial={{ x: -10, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.65 }}
+            className="text-gray-900 dark:text-gray-300 text-lg font-semibold mb-4"
+          >
+            By Asset Type
+          </motion.h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={currentData.assetType} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -203,9 +275,9 @@ const Analytics: React.FC = () => {
               />
             </BarChart>
           </ResponsiveContainer>
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 };
 
