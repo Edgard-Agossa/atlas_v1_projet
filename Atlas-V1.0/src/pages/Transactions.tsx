@@ -4,6 +4,7 @@ import CryptoPaymentModal from '../components/CryptoPaymentModal';
 import AddTransactionModal from '../components/AddTransactionModal';
 import MomoPaymentModal from '../components/MomoPaymentModal';
 import { Wallet, Plus, Smartphone } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const Transactions: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -54,61 +55,129 @@ console.log(portfolio)
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="min-h-screen bg-gray-50 dark:bg-gray-900"
+    >
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+      <motion.div 
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+        className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Transactions</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Gérez vos dépôts et retraits</p>
+          <motion.h1 
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="text-2xl font-bold text-gray-900 dark:text-white"
+          >
+            Transactions
+          </motion.h1>
+          <motion.p 
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            className="text-gray-600 dark:text-gray-400 mt-1"
+          >
+            Gérez vos dépôts et retraits
+          </motion.p>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 mt-8">
+      <motion.div 
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.4 }}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 mt-8"
+      >
         {/* Payment Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <button 
+          <motion.button 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.5 }}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setShowAddModal(true)}
             className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-3"
           >
             <Plus className="w-5 h-5" />
             <span>Ajouter Transaction</span>
-          </button>
+          </motion.button>
           
-          <button 
+          <motion.button 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.6 }}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setShowCryptoModal(true)}
             className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-3"
           >
             <Wallet className="w-5 h-5" />
             <span>Dépôt USDT</span>
-          </button>
+          </motion.button>
           
-          <button 
+          <motion.button 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.7 }}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setShowMomoModal(true)}
             className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-3"
           >
             <Smartphone className="w-5 h-5" />
             <span>Mobile Money</span>
-          </button>
+          </motion.button>
           
-          <button className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-3">
+          <motion.button 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.8 }}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-3"
+          >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
               <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" />
             </svg>
             <span>Dépôt Bancaire</span>
-          </button>
+          </motion.button>
           
-          <button className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-3">
+          <motion.button 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.9 }}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-3"
+          >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
             <span>Retrait</span>
-          </button>
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Transaction History - Full Width */}
-      <div className="w-full px-4 sm:px-6 lg:px-8 pb-8 mt-16">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+      <motion.div 
+        initial={{ y: 30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.4, delay: 1 }}
+        className="w-full px-4 sm:px-6 lg:px-8 pb-8 mt-16"
+      >
+        <motion.div 
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3, delay: 1.1 }}
+          className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700"
+        >
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
             <div>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Historique des Transactions</h2>
@@ -157,7 +226,14 @@ console.log(portfolio)
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {(showAllTransactions ? transactions : transactions.slice(0, 5)).map((transaction, index) => (
-                  <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <motion.tr 
+                    key={index} 
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.2, delay: 1.2 + index * 0.1 }}
+                    whileHover={{ backgroundColor: 'rgba(0, 0, 0, 0.02)' }}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
                     <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-300 font-medium">
                       {transaction.date_heure}
                     </td>
@@ -177,13 +253,13 @@ console.log(portfolio)
                     <td className="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white text-right">
                       ${transaction.amount}
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
       
       {/* Modals */}
       <AddTransactionModal
@@ -213,7 +289,7 @@ console.log(portfolio)
           alert('Paiement Mobile Money confirmé avec succès!');
         }}
       />
-    </div>
+    </motion.div>
   );
 };
 
