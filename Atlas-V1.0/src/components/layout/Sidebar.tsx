@@ -139,8 +139,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           {/* Header fixe - Ne bouge jamais */}
           <div className="flex-shrink-0 p-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center space-x-3 mb-6">
-              <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl shadow-lg">
-                <TrendingUp className="w-7 h-7 text-white" />
+              <div className="flex items-center justify-center w-12 h-12 bg-white rounded-xl shadow-lg p-1">
+                <img src="/PHRONESIS - Bleue.png" alt="Phronesis Capital" className="w-10 h-10 object-contain" />
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900 dark:text-white">{user?.firstName} {user?.lastName}</h1>

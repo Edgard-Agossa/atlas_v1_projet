@@ -69,22 +69,29 @@ console.log(portfolio)
         className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <motion.h1 
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className="text-2xl font-bold text-gray-900 dark:text-white"
-          >
-            Transactions
-          </motion.h1>
-          <motion.p 
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-            className="text-gray-600 dark:text-gray-400 mt-1"
-          >
-            Gérez vos dépôts et retraits
-          </motion.p>
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center justify-center w-12 h-12 bg-white rounded-xl shadow-lg p-1">
+              <img src="/PHRONESIS - Bleue.png" alt="Phronesis Capital" className="w-10 h-10 object-contain" />
+            </div>
+            <div>
+              <motion.h1 
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+                className="text-2xl font-bold text-gray-900 dark:text-white"
+              >
+                Transactions
+              </motion.h1>
+              <motion.p 
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.3 }}
+                className="text-gray-600 dark:text-gray-400"
+              >
+                Gérez vos dépôts et retraits
+              </motion.p>
+            </div>
+          </div>
         </div>
       </motion.div>
 
