@@ -65,7 +65,7 @@ const AdminUsersPro: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/auth/users/', {
+      const response = await fetch('http://127.0.0.1:8080/api/auth/users/', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
@@ -137,7 +137,7 @@ const AdminUsersPro: React.FC = () => {
 
     setSaving(true);
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/auth/register/', {
+      const response = await fetch('http://127.0.0.1:8080/api/auth/register/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -175,7 +175,7 @@ const AdminUsersPro: React.FC = () => {
 
     setSaving(true);
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/auth/users/${selectedUser.id}/`, {
+      const response = await fetch(`http://127.0.0.1:8080/api/auth/users/${selectedUser.id}/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -205,7 +205,7 @@ const AdminUsersPro: React.FC = () => {
 
     setSaving(true);
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/auth/users/${selectedUser.id}/`, {
+      const response = await fetch(`http://127.0.0.1:8080/api/auth/users/${selectedUser.id}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

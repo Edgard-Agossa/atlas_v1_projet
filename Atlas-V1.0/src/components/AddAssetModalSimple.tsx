@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { HoldingData } from '../hooks/useHoldingDataSimple';
+import NotificationModal from './NotificationModal';
 
 interface AddAssetModalSimpleProps {
   onClose: () => void;
@@ -20,6 +21,7 @@ const AddAssetModalSimple: React.FC<AddAssetModalSimpleProps> = ({ onClose, onAd
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'warning'; message: string } | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -62,7 +64,7 @@ const AddAssetModalSimple: React.FC<AddAssetModalSimpleProps> = ({ onClose, onAd
       onClose();
     } catch (error) {
       console.error('❌ Erreur lors de l\'ajout:', error);
-      window.alert(`Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+      setNotification({ type: 'error', message: error instanceof Error ? error.message : 'Erreur inconnue' });
     } finally {
       setIsSubmitting(false);
     }
@@ -189,6 +191,14 @@ const AddAssetModalSimple: React.FC<AddAssetModalSimpleProps> = ({ onClose, onAd
           </div>
         </form>
       </div>
+
+      {notification && (
+        <NotificationModal
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </div>
   );
 };

@@ -6,3 +6,6 @@ class HoldingSerializer(serializers.ModelSerializer):
         model = Holding
         fields = ['id', 'asset', 'symbol', 'name', 'quantity', 'avg_price', 'current_price', 'portfolio', 'sector', 'asset_type', 'last_updated']
         read_only_fields = ['id', 'last_updated']
+
+class FileUploadSerializer(serializers.Serializer):
+    file = serializers.FileField()

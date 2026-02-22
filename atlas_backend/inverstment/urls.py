@@ -1,6 +1,6 @@
 from django.urls import path, include
 from . import views
-
+from .views import AssetUploadView
 urlpatterns = [
     path('transactions/', views.TransactionListCreateView.as_view(), name='transaction-list'),
     path('portfolios/', views.PortfolioListView.as_view(), name='portfolio-list'),
@@ -30,4 +30,8 @@ urlpatterns = [
     path('mobile-money/payment/init/', views.MobileMoneyPaymentInitView.as_view(), name='mobile-money-init'),
     path('mobile-money/webhook/', views.MobileMoneyWebhookView.as_view(), name='mobile-money-webhook'),
     path('mobile-money/transaction/<str:transaction_id>/', views.MobileMoneyStatusView.as_view(), name='mobile-money-status'),
+        #Upload de fichier
+    path('upload-assets/', AssetUploadView.as_view(), name='asset-upload'),
+path('member/investments/', views.MemberInvestmentsView.as_view(), name='member-investments'),
+
 ]

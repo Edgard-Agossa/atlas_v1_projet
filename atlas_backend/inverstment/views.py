@@ -9,6 +9,7 @@ from .yfinance_service import YFinanceService
 from .usdt_transaction.usdt_service import crypto_service
 #importation de la classe AccountManager
 from .account_manager.account import AccountManager
+from .uploadFileViews import AssetUploadView
 class TransactionListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -614,3 +615,41 @@ class MobileMoneyStatusView(APIView):
             return Response({
                 'error': 'Transaction non trouvée'
             }, status=status.HTTP_404_NOT_FOUND)
+#récupération des inverst
+
+class MemberInvestmentsView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        try:
+            from .models import Compte_member
+            
+            # Filtrer uniquement les comptes de l'utilisateur connecté
+            comptes = Compte_member.objects.filter(
+                member=request.user,
+                is_active=True
+            ).select_related('portfolio', 'member')
+            
+            print(f"User: {request.user.email}, Comptes trouvés: {comptes.count()}")
+            
+            data = []
+            for compte in comptes:
+                data.append({
+                    'id': compte.id,
+                    'member_external_id': compte.member_external_id or 'N/A',
+                    'email': compte.member.email,
+                    'telephone': compte.member.phone or 'N/A',
+                    'date_entree': compte.created_at.strftime('%d/%m/%Y'),
+                    'balance': float(compte.balance),
+                    'shares_count': float(compte.shares_count),
+                    'gross_value': float(compte.gross_value),
+                    'portfolio_type': compte.portfolio.type,
+                    'portfolio_name': compte.portfolio.name,
+                    'is_active': compte.is_active
+                })
+            
+            return Response({'success': True, 'investments': data, 'total': len(data)})
+            
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return Response({'success': False, 'error': str(e)}, status=500)

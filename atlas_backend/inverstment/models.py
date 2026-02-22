@@ -86,29 +86,35 @@ class Member(models.Model):
         return self.name
 class Compte_member(models.Model):
     member = models.ForeignKey(User, on_delete=models.CASCADE, related_name='my_account')
-    account_number = models.CharField(max_length=50, unique=True)
-    balance = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, related_name='member_accounts')
+    
+    # Identifiant unique du fichier (ex: PHR-1)
+    member_external_id = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    
+    # Données financières issues de l'Excel
+    balance = models.DecimalField(max_digits=15, decimal_places=2, default=0) # Montant versé
+    shares_count = models.DecimalField(max_digits=15, decimal_places=6, default=0) # Nbre de part
+    gross_value = models.DecimalField(max_digits=15, decimal_places=2, default=0) # Valeur Brute
+    
+    # Métadonnées
+    account_number = models.CharField(max_length=50, unique=True)
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    is_active = models.BooleanField(default=True)
-    
+
     class Meta:
-        unique_together = ['member', 'portfolio']# Empêche qu'in membre ait plusieurs comptes pour le même portefeuille
+        unique_together = ['member', 'portfolio']
         verbose_name = 'Compte Membre'
         verbose_name_plural = 'Comptes Membres'
-    
-    def __str__(self):
-        return f"{self.member.name} - {self.portfolio.name} ({self.account_number})"
-    
+
     def save(self, *args, **kwargs):
         if not self.account_number:
+            # On utilise le type de portfolio (PHR/FLG) pour le numéro de compte
+            prefix = self.portfolio.type[:3].upper() if self.portfolio else "ACC"
             import uuid
-            self.account_number = f"{self.portfolio.type[:3]}-{str(uuid.uuid4())[:8].upper()}"
+            self.account_number = f"{prefix}-{str(uuid.uuid4())[:8].upper()}"
         super().save(*args, **kwargs)
-        
-        
-        
+           
         
 # Modèles pour le système de paiement USDT
 class USDTPayment(models.Model):

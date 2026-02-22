@@ -226,3 +226,10 @@ Votre fonction actuelle est utile pour :
 ✅ Valider les fonds disponibles
 
 ❌ Mais pas pour détecter automatiquement les nouveaux paiements
+
+La solution pour corriger l'erreur
+Puisque tu es dans ton dossier projet avec l'environnement (env) activé, lance exactement cette commande :
+
+Bash
+python -m pip install openpyxl pandas
+L'utilisation de python -m pip au lieu de pip tout court garantit que l'installation se fait bien à l'intérieur de l'environnement virtuel que Django utilise actuellement.
