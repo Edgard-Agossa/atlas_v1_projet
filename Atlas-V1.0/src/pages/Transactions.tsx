@@ -3,6 +3,7 @@ import {AccountService,Transaction, Prtfolios} from '../contexts/DataUrl';
 import CryptoPaymentModal from '../components/CryptoPaymentModal';
 import AddTransactionModal from '../components/AddTransactionModal';
 import MomoPaymentModal from '../components/MomoPaymentModal';
+import NotificationModal from '../components/NotificationModal';
 import { Wallet, Plus, Smartphone } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -14,6 +15,7 @@ const Transactions: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showMomoModal, setShowMomoModal] = useState(false);
   const [showAllTransactions, setShowAllTransactions] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'warning'; message: string } | null>(null);
   const fetcTransactions = async () => {
     setLoading(true);
     try {
@@ -274,7 +276,7 @@ console.log(portfolio)
         onClose={() => setShowAddModal(false)}
         onSuccess={() => {
           fetcTransactions();
-          alert('Transaction ajoutée avec succès!');
+          setNotification({ type: 'success', message: 'Transaction ajoutée avec succès!' });
         }}
         portfolios={portfolio}
       />
@@ -284,7 +286,7 @@ console.log(portfolio)
         onClose={() => setShowCryptoModal(false)}
         onSuccess={() => {
           fetcTransactions();
-          alert('Dépôt USDT confirmé avec succès!');
+          setNotification({ type: 'success', message: 'Dépôt USDT confirmé avec succès!' });
         }}
       />
       
@@ -293,9 +295,17 @@ console.log(portfolio)
         onClose={() => setShowMomoModal(false)}
         onSuccess={() => {
           fetcTransactions();
-          alert('Paiement Mobile Money confirmé avec succès!');
+          setNotification({ type: 'success', message: 'Paiement Mobile Money confirmé avec succès!' });
         }}
       />
+
+      {notification && (
+        <NotificationModal
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </motion.div>
   );
 };

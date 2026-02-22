@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {AccountService,Transaction, Prtfolios} from '../contexts/DataUrl';
 import CryptoPaymentModal from '../components/CryptoPaymentModal';
+import NotificationModal from '../components/NotificationModal';
 import { Wallet } from 'lucide-react';
 
 const Transactions: React.FC = () => {
@@ -8,6 +9,7 @@ const Transactions: React.FC = () => {
   const [portfolio, setPortfolio] = useState<Prtfolios[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCryptoModal, setShowCryptoModal] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'warning'; message: string } | null>(null);
 
   const fetcTransactions = async () => {
     setLoading(true);
@@ -162,9 +164,17 @@ useEffect(() => {
         onClose={() => setShowCryptoModal(false)}
         onSuccess={() => {
           fetcTransactions();
-          alert('Dépôt USDT confirmé avec succès!');
+          setNotification({ type: 'success', message: 'Dépôt USDT confirmé avec succès!' });
         }}
       />
+
+      {notification && (
+        <NotificationModal
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </div>
   );
 };
