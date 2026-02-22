@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Filter, 
+import {
+  TrendingUp,
+  TrendingDown,
+  Filter,
   Download,
   Eye,
   MoreHorizontal,
@@ -18,7 +18,6 @@ import { useHoldingDataSimple } from '../hooks/useHoldingDataSimple';
 import AddAssetModalSimple from '../components/AddAssetModalSimple';
 import { useAuth } from '../contexts/AuthContext';
 import ExcelUploadModal from '../components/ExcelUploadModal';
-import NotificationModal from '../components/NotificationModal';
 
 const PortfolioSimple: React.FC = () => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -28,46 +27,45 @@ const PortfolioSimple: React.FC = () => {
   const [sortBy, setSortBy] = useState<'value' | 'gain' | 'symbol'>('value');
   const [showFilters, setShowFilters] = useState(false);
   const { user } = useAuth();
-  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'warning'; message: string } | null>(null);
 
-// --- DONNÉES EN DUR POUR LE MEMBRE (Mock Data) ---
+  // --- DONNÉES EN DUR POUR LE MEMBRE (Mock Data) ---
 
- const [memberInvestments, setMemberInvestments] = useState<any[]>([]);
+  const [memberInvestments, setMemberInvestments] = useState<any[]>([]);
 
-useEffect(() => {
-  const fetchInvestments = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      console.log('Token:', token ? 'Présent' : 'Absent');
-      
-      const response = await fetch('http://127.0.0.1:8080/api/investment/member/investments/', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      console.log('Response status:', response.status);
-      const data = await response.json();
-      console.log('Données reçues:', data);
-      
-      if (data.success) {
-        console.log('Nombre d\'investissements:', data.investments.length);
-        setMemberInvestments(data.investments);
+  useEffect(() => {
+    const fetchInvestments = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        console.log('Token:', token ? 'Présent' : 'Absent');
+
+        const response = await fetch('http://127.0.0.1:8080/api/investment/member/investments/', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        console.log('Response status:', response.status);
+        const data = await response.json();
+        console.log('Données reçues:', data);
+
+        if (data.success) {
+          console.log('Nombre d\'investissements:', data.investments.length);
+          setMemberInvestments(data.investments);
+        }
+      } catch (error) {
+        console.error('Erreur:', error);
       }
-    } catch (error) {
-      console.error('Erreur:', error);
-    }
-  };
-  
-  fetchInvestments();
-}, []);
+    };
+
+    fetchInvestments();
+  }, []);
 
   const handleAddAsset = async (assetData: any) => {
     try {
       await createHolding(assetData);
       setIsAddAssetModalOpen(false);
-      setNotification({ type: 'success', message: 'Actif ajouté avec succès!' });
+      window.alert('Actif ajouté avec succès!');
     } catch (error) {
       console.error('Erreur lors de l\'ajout:', error);
-      setNotification({ type: 'error', message: error instanceof Error ? error.message : 'Erreur inconnue' });
+      window.alert(`Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     }
   };
 
@@ -80,7 +78,7 @@ useEffect(() => {
 
   // Calculs simples basés sur les données réelles du modèle
   const holdingsArray = Array.isArray(holdings) ? holdings : [];
-  
+
   // Filtrage et tri
   const filteredHoldings = holdingsArray
     .filter(holding => selectedPortfolio === 'ALL' || holding.portfolio === selectedPortfolio)
@@ -98,43 +96,44 @@ useEffect(() => {
           return 0;
       }
     });
-  
+
   const totalValue = filteredHoldings.reduce((sum, h) => sum + (h.quantity * h.current_price), 0);
   const totalCost = filteredHoldings.reduce((sum, h) => sum + (h.quantity * h.avg_price), 0);
   const totalGain = totalValue - totalCost;
   const totalGainPercent = totalCost > 0 ? (totalGain / totalCost) * 100 : 0;
-  
+
   const handleEdit = (holding: any) => {
     console.log('Éditer:', holding);
-    setNotification({ type: 'warning', message: 'Fonction d\'édition à implémenter' });
+    // TODO: Ouvrir modal d'édition
+    window.alert('Fonction d\'\u00e9dition à implémenter');
   };
-  
+
   const handleDelete = async (holding: any) => {
     if (window.confirm(`Supprimer ${holding.symbol} ?`)) {
       try {
         await deleteHolding(holding.id);
-        setNotification({ type: 'success', message: 'Actif supprimé avec succès' });
+        window.alert('Actif supprimé avec succès');
       } catch (error) {
-        setNotification({ type: 'error', message: 'Erreur lors de la suppression' });
+        window.alert('Erreur lors de la suppression');
         console.error(error);
       }
     }
   };
-  
+
   const handleTogglePublic = (holding: any) => {
     console.log('Toggle public:', holding);
     // TODO: Implémenter toggle public
   };
-  
+
   const exportData = () => {
-    const csvContent = "data:text/csv;charset=utf-8," + 
+    const csvContent = "data:text/csv;charset=utf-8," +
       "Symbol,Name,Quantity,Avg Price,Current Price,Value,Gain\n" +
       filteredHoldings.map(h => {
         const value = h.quantity * h.current_price;
         const gain = value - (h.quantity * h.avg_price);
         return `${h.symbol},${h.name},${h.quantity},${h.avg_price},${h.current_price},${value},${gain}`;
       }).join("\n");
-    
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -174,47 +173,46 @@ useEffect(() => {
               <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 whitespace-nowrap tracking-wide">Téléphone</th>
               <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 whitespace-nowrap tracking-wide">Date d'entrée</th>
               <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 whitespace-nowrap tracking-wide">Date versement</th>
-              <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 text-right whitespace-nowrap tracking-wide">Promesse<br/>Annuelle</th>
-              <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 text-right whitespace-nowrap tracking-wide">Montant<br/>versé</th>
-              <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 text-right whitespace-nowrap tracking-wide">Frais de<br/>gestion</th>
-              <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 text-right whitespace-nowrap tracking-wide">Capital investi<br/>(exlus frais)</th>
-              <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 text-right whitespace-nowrap tracking-wide">Parts<br/>détenues (%)</th>
-              <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 whitespace-nowrap tracking-wide">Nbre<br/>de part</th>
-              <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 text-right whitespace-nowrap tracking-wide">Valeur<br/>nette</th>
-              <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 whitespace-nowrap tracking-wide">Statut<br/>Portfolio</th>
-              <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 whitespace-nowrap tracking-wide">Profit<br/>Type</th>
+              <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 text-right whitespace-nowrap tracking-wide">Promesse<br />Annuelle</th>
+              <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 text-right whitespace-nowrap tracking-wide">Montant<br />versé</th>
+              <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 text-right whitespace-nowrap tracking-wide">Frais de<br />gestion</th>
+              <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 text-right whitespace-nowrap tracking-wide">Capital investi<br />(exlus frais)</th>
+              <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 text-right whitespace-nowrap tracking-wide">Parts<br />détenues (%)</th>
+              <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 whitespace-nowrap tracking-wide">Nbre<br />de part</th>
+              <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 text-right whitespace-nowrap tracking-wide">Valeur<br />nette</th>
+              <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 whitespace-nowrap tracking-wide">Statut<br />Portfolio</th>
+              <th className="px-4 py-4 text-xs font-extrabold uppercase border-b-2 border-yellow-600 whitespace-nowrap tracking-wide">Profit<br />Type</th>
             </tr>
           </thead>
           <tbody className="bg-white">
-  {memberInvestments.map((inv, idx) => (
-    <tr key={inv.id} className="divide-x divide-gray-300 hover:bg-yellow-50 transition-all duration-200 border-b border-gray-200">
-      <td className="px-4 py-5 text-sm text-center font-bold whitespace-nowrap bg-gradient-to-r from-blue-50 to-blue-100 text-blue-900">{idx + 1}</td>
-      <td className="px-4 py-5 text-sm font-semibold whitespace-nowrap text-gray-800">{inv.member_external_id}</td>
-      <td className="px-4 py-5 text-sm uppercase whitespace-nowrap font-semibold text-gray-900">{user?.firstName} {user?.lastName}</td>
-      <td className="px-4 py-5 text-sm whitespace-nowrap text-gray-700">{inv.email}</td>
-      <td className="px-4 py-5 text-sm text-center whitespace-nowrap text-gray-700">{inv.telephone}</td>
-      <td className="px-4 py-5 text-sm text-center whitespace-nowrap text-gray-700">{inv.date_entree}</td>
-      <td className="px-4 py-5 text-sm text-center whitespace-nowrap text-gray-700">-</td>
-      <td className="px-4 py-5 text-sm text-right font-bold whitespace-nowrap text-blue-700">-</td>
-      <td className="px-4 py-5 text-sm text-right font-bold whitespace-nowrap text-green-700">{formatCurrency(inv.balance)}</td>
-      <td className="px-4 py-5 text-sm text-right font-bold text-red-600 whitespace-nowrap bg-red-50">-</td>
-      <td className="px-4 py-5 text-sm text-right font-extrabold whitespace-nowrap text-indigo-700">{formatCurrency(inv.balance)}</td>
-      <td className="px-4 py-5 text-sm text-right font-bold whitespace-nowrap text-purple-700">-</td>
-      <td className="px-4 py-5 text-sm text-center font-bold whitespace-nowrap text-gray-900">{inv.shares_count.toFixed(2)}</td>
-      <td className="px-4 py-5 text-sm text-right font-extrabold text-green-700 bg-gradient-to-r from-green-50 to-green-100 whitespace-nowrap text-lg">{formatCurrency(inv.gross_value)}</td>
-      <td className="px-4 py-5 text-sm text-center whitespace-nowrap">
-        <span className={`inline-flex px-3 py-1.5 text-xs font-bold rounded-full shadow-md ${
-          inv.is_active 
-            ? 'bg-gradient-to-r from-green-400 to-green-500 text-white' 
-            : 'bg-gradient-to-r from-red-400 to-red-500 text-white'
-        }`}>
-          {inv.is_active ? 'Actif' : 'Inactif'}
-        </span>
-      </td>
-      <td className="px-4 py-5 text-sm text-center whitespace-nowrap font-semibold text-gray-800">{inv.portfolio_name}</td>
-    </tr>
-  ))}
-</tbody>
+            {memberInvestments.map((inv, idx) => (
+              <tr key={inv.id} className="divide-x divide-gray-300 hover:bg-yellow-50 transition-all duration-200 border-b border-gray-200">
+                <td className="px-4 py-5 text-sm text-center font-bold whitespace-nowrap bg-gradient-to-r from-blue-50 to-blue-100 text-blue-900">{idx + 1}</td>
+                <td className="px-4 py-5 text-sm font-semibold whitespace-nowrap text-gray-800">{inv.member_external_id}</td>
+                <td className="px-4 py-5 text-sm uppercase whitespace-nowrap font-semibold text-gray-900">{user?.firstName} {user?.lastName}</td>
+                <td className="px-4 py-5 text-sm whitespace-nowrap text-gray-700">{inv.email}</td>
+                <td className="px-4 py-5 text-sm text-center whitespace-nowrap text-gray-700">{inv.telephone}</td>
+                <td className="px-4 py-5 text-sm text-center whitespace-nowrap text-gray-700">{inv.date_entree}</td>
+                <td className="px-4 py-5 text-sm text-center whitespace-nowrap text-gray-700">-</td>
+                <td className="px-4 py-5 text-sm text-right font-bold whitespace-nowrap text-blue-700">-</td>
+                <td className="px-4 py-5 text-sm text-right font-bold whitespace-nowrap text-green-700">{formatCurrency(inv.balance)}</td>
+                <td className="px-4 py-5 text-sm text-right font-bold text-red-600 whitespace-nowrap bg-red-50">-</td>
+                <td className="px-4 py-5 text-sm text-right font-extrabold whitespace-nowrap text-indigo-700">{formatCurrency(inv.balance)}</td>
+                <td className="px-4 py-5 text-sm text-right font-bold whitespace-nowrap text-purple-700">-</td>
+                <td className="px-4 py-5 text-sm text-center font-bold whitespace-nowrap text-gray-900">{inv.shares_count.toFixed(2)}</td>
+                <td className="px-4 py-5 text-sm text-right font-extrabold text-green-700 bg-gradient-to-r from-green-50 to-green-100 whitespace-nowrap text-lg">{formatCurrency(inv.gross_value)}</td>
+                <td className="px-4 py-5 text-sm text-center whitespace-nowrap">
+                  <span className={`inline-flex px-3 py-1.5 text-xs font-bold rounded-full shadow-md ${inv.is_active
+                      ? 'bg-gradient-to-r from-green-400 to-green-500 text-white'
+                      : 'bg-gradient-to-r from-red-400 to-red-500 text-white'
+                    }`}>
+                    {inv.is_active ? 'Actif' : 'Inactif'}
+                  </span>
+                </td>
+                <td className="px-4 py-5 text-sm text-center whitespace-nowrap font-semibold text-gray-800">{inv.portfolio_name}</td>
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
       {/* Indicateur de scroll sur mobile */}
@@ -267,11 +265,10 @@ useEffect(() => {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    holding.portfolio === 'PHRONESIS'
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${holding.portfolio === 'PHRONESIS'
                       ? 'bg-primary-100 text-primary-800 dark:bg-primary-900/20 dark:text-primary-300'
                       : 'bg-success-100 text-success-800 dark:bg-success-900/20 dark:text-success-300'
-                  }`}>
+                    }`}>
                     {holding.portfolio === 'PHRONESIS' ? 'Phronesis' : 'FlagShip'}
                   </span>
                 </td>
@@ -279,9 +276,8 @@ useEffect(() => {
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900 dark:text-white">{formatCurrency(holding.avg_price)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900 dark:text-white">{formatCurrency(holding.current_price)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900 dark:text-white">{formatCurrency(marketValue)}</td>
-                <td className={`px-6 py-4 whitespace-nowrap text-right text-sm font-medium ${
-                  gain >= 0 ? 'text-success-600' : 'text-danger-600'
-                }`}>
+                <td className={`px-6 py-4 whitespace-nowrap text-right text-sm font-medium ${gain >= 0 ? 'text-success-600' : 'text-danger-600'
+                  }`}>
                   {formatCurrency(gain)} ({gainPercent >= 0 ? '+' : ''}{gainPercent.toFixed(2)}%)
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
@@ -318,11 +314,11 @@ useEffect(() => {
           </p>
         </div>
         {user?.role === 'admin' && (
-          
+
           <div className="flex items-center space-x-3 mt-4 sm:mt-0">
             <button className="btn-secondary flex items-center" onClick={() => setIsUploadModalOpen(true)}>
-  <Upload className="w-4 h-4 mr-2" />Importer Excel
-</button>
+              <Upload className="w-4 h-4 mr-2" />Importer Excel
+            </button>
 
             <button className="btn-secondary flex items-center" onClick={() => setShowFilters(!showFilters)}>
               <Filter className="w-4 h-4 mr-2" />Filtrer
@@ -339,89 +335,85 @@ useEffect(() => {
 
       {/* Summary Cards - Uniquement pour Admin */}
       {user?.role === 'admin' && (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="card p-6"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Valeur totale
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-                {formatCurrency(totalValue)}
-              </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="card p-6"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Valeur totale
+                </p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
+                  {formatCurrency(totalValue)}
+                </p>
+              </div>
+              <div className="p-3 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
+                <TrendingUp className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+              </div>
             </div>
-            <div className="p-3 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-              <TrendingUp className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="card p-6"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Gain/Perte
-              </p>
-              <p className={`text-2xl font-bold mt-2 ${
-                totalGain >= 0 ? 'text-success-600' : 'text-danger-600'
-              }`}>
-                {formatCurrency(totalGain)}
-              </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="card p-6"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Gain/Perte
+                </p>
+                <p className={`text-2xl font-bold mt-2 ${totalGain >= 0 ? 'text-success-600' : 'text-danger-600'
+                  }`}>
+                  {formatCurrency(totalGain)}
+                </p>
+              </div>
+              <div className={`p-3 rounded-xl ${totalGain >= 0
+                  ? 'bg-success-100 dark:bg-success-900/20'
+                  : 'bg-danger-100 dark:bg-danger-900/20'
+                }`}>
+                {totalGain >= 0 ? (
+                  <TrendingUp className="w-6 h-6 text-success-600 dark:text-success-400" />
+                ) : (
+                  <TrendingDown className="w-6 h-6 text-danger-600 dark:text-danger-400" />
+                )}
+              </div>
             </div>
-            <div className={`p-3 rounded-xl ${
-              totalGain >= 0 
-                ? 'bg-success-100 dark:bg-success-900/20' 
-                : 'bg-danger-100 dark:bg-danger-900/20'
-            }`}>
-              {totalGain >= 0 ? (
-                <TrendingUp className="w-6 h-6 text-success-600 dark:text-success-400" />
-              ) : (
-                <TrendingDown className="w-6 h-6 text-danger-600 dark:text-danger-400" />
-              )}
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="card p-6"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Rendement
-              </p>
-              <p className={`text-2xl font-bold mt-2 ${
-                totalGainPercent >= 0 ? 'text-success-600' : 'text-danger-600'
-              }`}>
-                {totalGainPercent >= 0 ? '+' : ''}{totalGainPercent.toFixed(2)}%
-              </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="card p-6"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Rendement
+                </p>
+                <p className={`text-2xl font-bold mt-2 ${totalGainPercent >= 0 ? 'text-success-600' : 'text-danger-600'
+                  }`}>
+                  {totalGainPercent >= 0 ? '+' : ''}{totalGainPercent.toFixed(2)}%
+                </p>
+              </div>
+              <div className={`p-3 rounded-xl ${totalGainPercent >= 0
+                  ? 'bg-success-100 dark:bg-success-900/20'
+                  : 'bg-danger-100 dark:bg-danger-900/20'
+                }`}>
+                {totalGainPercent >= 0 ? (
+                  <TrendingUp className="w-6 h-6 text-success-600 dark:text-success-400" />
+                ) : (
+                  <TrendingDown className="w-6 h-6 text-danger-600 dark:text-danger-400" />
+                )}
+              </div>
             </div>
-            <div className={`p-3 rounded-xl ${
-              totalGainPercent >= 0 
-                ? 'bg-success-100 dark:bg-success-900/20' 
-                : 'bg-danger-100 dark:bg-danger-900/20'
-            }`}>
-              {totalGainPercent >= 0 ? (
-                <TrendingUp className="w-6 h-6 text-success-600 dark:text-success-400" />
-              ) : (
-                <TrendingDown className="w-6 h-6 text-danger-600 dark:text-danger-400" />
-              )}
-            </div>
-          </div>
-        </motion.div>
-      </div>
+          </motion.div>
+        </div>
       )}
 
       {/* Filters - Uniquement pour Admin */}
@@ -443,7 +435,7 @@ useEffect(() => {
                 <option value="PHRONESIS">Phronesis (Passif)</option>
                 <option value="FLAGSHIP">FlagShip (Actif)</option>
               </select>
-              
+
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as 'value' | 'gain' | 'symbol')}
@@ -454,7 +446,7 @@ useEffect(() => {
                 <option value="symbol">Trier par symbole</option>
               </select>
             </div>
-            
+
             <div className="text-sm text-gray-600 dark:text-gray-400">
               {filteredHoldings.length} position{filteredHoldings.length > 1 ? 's' : ''}
             </div>
@@ -464,9 +456,9 @@ useEffect(() => {
 
       {/* Rendu du tableau admin */}
       {user?.role === 'admin' && (
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }} 
-          animate={{ opacity: 1, y: 0 }} 
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
           className="card bg-white dark:bg-gray-900 shadow-xl rounded-xl overflow-hidden"
         >
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -477,8 +469,8 @@ useEffect(() => {
       )}
 
       {/* Tableau membre (pour tous) */}
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }} 
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: user?.role === 'admin' ? 0.2 : 0 }}
         className="card bg-white dark:bg-gray-900 shadow-xl rounded-xl overflow-hidden"
@@ -493,25 +485,18 @@ useEffect(() => {
 
       {/* Modal d'ajout d'actif */}
       {isAddAssetModalOpen && (
-        <AddAssetModalSimple 
+        <AddAssetModalSimple
           onClose={() => setIsAddAssetModalOpen(false)}
           onAddAsset={handleAddAsset}
         />
       )}
       {isUploadModalOpen && (
-  <ExcelUploadModal 
-    onClose={() => setIsUploadModalOpen(false)}
-    onSuccess={() => window.location.reload()}
-  />
-)}
-
-      {notification && (
-        <NotificationModal
-          type={notification.type}
-          message={notification.message}
-          onClose={() => setNotification(null)}
+        <ExcelUploadModal
+          onClose={() => setIsUploadModalOpen(false)}
+          onSuccess={() => window.location.reload()}
         />
       )}
+
     </div>
   );
 };
