@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { AccountService, Transaction, Prtfolios } from '../contexts/DataUrl';
 import API_BASE_URL from '../config/api';
+import { apiFetch } from '../utils/apiFetch';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -65,16 +66,6 @@ interface AppState {
   refreshAll: () => Promise<void>;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
-  return {
-    'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-};
-
 // ─── Store ────────────────────────────────────────────────────────────────────
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -123,9 +114,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   fetchHoldings: async () => {
     set({ loadingHoldings: true, errorHoldings: null });
     try {
-      const response = await fetch(`${API_BASE_URL}/investment/holdings/`, {
-        headers: getAuthHeaders(),
-      });
+      const response = await apiFetch(`${API_BASE_URL}/investment/holdings/`);
       if (!response.ok) throw new Error(`Erreur ${response.status}`);
       const data = await response.json();
       const holdingsArray: HoldingItem[] = Array.isArray(data)
@@ -143,9 +132,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   fetchMemberInvestments: async () => {
     set({ loadingMemberInvestments: true, errorMemberInvestments: null });
     try {
-      const response = await fetch(`${API_BASE_URL}/investment/member/investments/`, {
-        headers: getAuthHeaders(),
-      });
+      const response = await apiFetch(`${API_BASE_URL}/investment/member/investments/`);
       if (!response.ok) throw new Error(`Erreur ${response.status}`);
       const data = await response.json();
       set({ memberInvestments: data.success ? data.investments : [] });
@@ -158,22 +145,20 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // ── CRUD holdings ─────────────────────────────────────────────────────────
   createHolding: async (holdingData) => {
-    const response = await fetch(`${API_BASE_URL}/investment/holdings/`, {
+    const response = await apiFetch(`${API_BASE_URL}/investment/holdings/`, {
       method: 'POST',
-      headers: getAuthHeaders(),
       body: JSON.stringify(holdingData),
     });
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(errorText);
     }
-    await get().fetchHoldings(); // rafraîchit le store
+    await get().fetchHoldings();
   },
 
   updateHolding: async (id, holdingData) => {
-    const response = await fetch(`${API_BASE_URL}/investment/holdings/${id}/`, {
+    const response = await apiFetch(`${API_BASE_URL}/investment/holdings/${id}/`, {
       method: 'PATCH',
-      headers: getAuthHeaders(),
       body: JSON.stringify(holdingData),
     });
     if (!response.ok) throw new Error(`Erreur ${response.status}`);
@@ -181,9 +166,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   deleteHolding: async (id) => {
-    const response = await fetch(`${API_BASE_URL}/investment/holdings/${id}/`, {
+    const response = await apiFetch(`${API_BASE_URL}/investment/holdings/${id}/`, {
       method: 'DELETE',
-      headers: getAuthHeaders(),
     });
     if (!response.ok) throw new Error(`Erreur ${response.status}`);
     await get().fetchHoldings();
