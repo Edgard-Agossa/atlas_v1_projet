@@ -5,6 +5,19 @@ import { apiFetch } from '../utils/apiFetch';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export interface MemberItem {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string | null;
+  avatar: string | null;
+  role: string | null;
+  is_active: boolean;
+  join_date: string;
+  last_login: string | null;
+}
+
 export interface HoldingItem {
   id: number;
   asset: string;
@@ -39,23 +52,27 @@ interface AppState {
   portfolios: Prtfolios[];
   holdings: HoldingItem[];
   memberInvestments: MemberInvestment[];
+  members: MemberItem[];
 
   // ── États de chargement ──────────────────────────────────────────────────
   loadingTransactions: boolean;
   loadingPortfolios: boolean;
   loadingHoldings: boolean;
   loadingMemberInvestments: boolean;
+  loadingMembers: boolean;
 
   // ── Erreurs ──────────────────────────────────────────────────────────────
   errorTransactions: string | null;
   errorHoldings: string | null;
   errorMemberInvestments: string | null;
+  errorMembers: string | null;
 
   // ── Actions fetch ────────────────────────────────────────────────────────
   fetchTransactions: () => Promise<void>;
   fetchPortfolios: () => Promise<void>;
   fetchHoldings: () => Promise<void>;
   fetchMemberInvestments: () => Promise<void>;
+  fetchMembers: () => Promise<void>;
 
   // ── Actions CRUD holdings ────────────────────────────────────────────────
   createHolding: (data: Omit<HoldingItem, 'id' | 'last_updated'>) => Promise<void>;
@@ -74,15 +91,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   portfolios: [],
   holdings: [],
   memberInvestments: [],
+  members: [],
 
   loadingTransactions: false,
   loadingPortfolios: false,
   loadingHoldings: false,
   loadingMemberInvestments: false,
+  loadingMembers: false,
 
   errorTransactions: null,
   errorHoldings: null,
   errorMemberInvestments: null,
+  errorMembers: null,
 
   // ── Fetch transactions ────────────────────────────────────────────────────
   fetchTransactions: async () => {
@@ -143,7 +163,20 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  // ── CRUD holdings ─────────────────────────────────────────────────────────
+  // ── Fetch members (users list) ────────────────────────────────────────────
+  fetchMembers: async () => {
+    set({ loadingMembers: true, errorMembers: null });
+    try {
+      const response = await apiFetch(`${API_BASE_URL}/auth/users/`);
+      if (!response.ok) throw new Error(`Erreur ${response.status}`);
+      const data = await response.json();
+      set({ members: data.users || [] });
+    } catch (e) {
+      set({ errorMembers: 'Erreur lors du chargement des membres' });
+    } finally {
+      set({ loadingMembers: false });
+    }
+  },  // ── CRUD holdings ─────────────────────────────────────────────────────────
   createHolding: async (holdingData) => {
     const response = await apiFetch(`${API_BASE_URL}/investment/holdings/`, {
       method: 'POST',
@@ -175,12 +208,13 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // ── Refresh global ────────────────────────────────────────────────────────
   refreshAll: async () => {
-    const { fetchTransactions, fetchPortfolios, fetchHoldings, fetchMemberInvestments } = get();
+    const { fetchTransactions, fetchPortfolios, fetchHoldings, fetchMemberInvestments, fetchMembers } = get();
     await Promise.all([
       fetchTransactions(),
       fetchPortfolios(),
       fetchHoldings(),
       fetchMemberInvestments(),
+      fetchMembers(),
     ]);
   },
 }));
