@@ -1,495 +1,455 @@
-import React, { useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, BarChart3, PieChart as PieChartIcon, Target, DollarSign } from 'lucide-react';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area
+} from 'recharts';
+import {
+  TrendingUp,
+  TrendingDown,
+  Target,
+  Activity,
+  Calendar,
+  DollarSign,
+  BarChart3,
+  PieChart as PieChartIcon
+} from 'lucide-react';
+import { PerformanceDataPoint, Portfolio, PortfolioType, Transaction, TransactionType } from '../types';
 
-const Analytics: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('Combined');
+interface AnalyticsProps {
+  performanceHistory: PerformanceDataPoint[];
+  portfolios: { [key in PortfolioType]: Portfolio };
+  transactions: Transaction[];
+}
 
-  const portfolioData = {
-    Combined: {
-      metrics: {
-        totalReturn: '+25.4%',
-        totalReturnChange: '+2.8%',
-        alpha: '4.6%',
-        alphaChange: '+0.3%',
-        expenseRatio: '0.65%',
-        expenseChange: '-0.05%',
-        trackingError: '2.1%',
-        trackingChange: '+0.1%'
-      },
-      performance: [
-        { month: 'Jan', portfolio: 8.2, benchmark: 6.1 },
-        { month: 'Feb', portfolio: 12.5, benchmark: 8.3 },
-        { month: 'Mar', portfolio: 15.8, benchmark: 11.2 },
-        { month: 'Apr', portfolio: 18.3, benchmark: 14.7 },
-        { month: 'May', portfolio: 22.1, benchmark: 17.9 },
-        { month: 'Jun', portfolio: 25.4, benchmark: 20.8 }
-      ],
-      holdings: [
-        { name: 'AAPL', weight: '8.2%', return: '+12.4%', sector: 'Technology' },
-        { name: 'MSFT', weight: '7.1%', return: '+15.8%', sector: 'Technology' },
-        { name: 'GOOGL', weight: '5.9%', return: '+9.2%', sector: 'Communication' }
-      ],
-      sector: [
-        { name: 'Technology', value: 45 },
-        { name: 'Precious Metals', value: 25 },
-        { name: 'Communication', value: 15 },
-        { name: 'Healthcare', value: 10 },
-        { name: 'Finance', value: 5 }
-      ],
-      geography: [
-        { name: 'USA', value: 60 },
-        { name: 'Global', value: 25 },
-        { name: 'Europe', value: 10 },
-        { name: 'Asia', value: 5 }
-      ],
-      assetType: [
-        { name: 'Common Stock', value: 35 },
-        { name: 'Currency Pair', value: 25 },
-        { name: 'ETF', value: 20 },
-        { name: 'Cash', value: 20 }
-      ]
-    },
-    Phronesis: {
-      metrics: {
-        totalReturn: '+18.7%',
-        totalReturnChange: '+1.9%',
-        alpha: '3.2%',
-        alphaChange: '+0.2%',
-        expenseRatio: '0.75%',
-        expenseChange: '+0.02%',
-        trackingError: '1.8%',
-        trackingChange: '-0.1%'
-      },
-      performance: [
-        { month: 'Jan', portfolio: 6.8, benchmark: 6.1 },
-        { month: 'Feb', portfolio: 9.2, benchmark: 8.3 },
-        { month: 'Mar', portfolio: 12.1, benchmark: 11.2 },
-        { month: 'Apr', portfolio: 14.9, benchmark: 14.7 },
-        { month: 'May', portfolio: 16.8, benchmark: 17.9 },
-        { month: 'Jun', portfolio: 18.7, benchmark: 20.8 }
-      ],
-      holdings: [
-        { name: 'NVDA', weight: '12.1%', return: '+28.5%', sector: 'Technology' },
-        { name: 'AAPL', weight: '9.8%', return: '+12.4%', sector: 'Technology' },
-        { name: 'JNJ', weight: '6.2%', return: '+8.1%', sector: 'Healthcare' }
-      ],
-      sector: [
-        { name: 'Technology', value: 55 },
-        { name: 'Healthcare', value: 20 },
-        { name: 'Finance', value: 15 },
-        { name: 'Communication', value: 10 }
-      ],
-      geography: [
-        { name: 'USA', value: 70 },
-        { name: 'Europe', value: 20 },
-        { name: 'Asia', value: 10 }
-      ],
-      assetType: [
-        { name: 'Common Stock', value: 60 },
-        { name: 'ETF', value: 25 },
-        { name: 'Cash', value: 15 }
-      ]
-    },
-    FlagShip: {
-      metrics: {
-        totalReturn: '+32.1%',
-        totalReturnChange: '+4.2%',
-        alpha: '6.8%',
-        alphaChange: '+0.7%',
-        expenseRatio: '0.45%',
-        expenseChange: '-0.08%',
-        trackingError: '3.2%',
-        trackingChange: '+0.3%'
-      },
-      performance: [
-        { month: 'Jan', portfolio: 11.5, benchmark: 6.1 },
-        { month: 'Feb', portfolio: 16.8, benchmark: 8.3 },
-        { month: 'Mar', portfolio: 21.2, benchmark: 11.2 },
-        { month: 'Apr', portfolio: 25.7, benchmark: 14.7 },
-        { month: 'May', portfolio: 29.1, benchmark: 17.9 },
-        { month: 'Jun', portfolio: 32.1, benchmark: 20.8 }
-      ],
-      holdings: [
-        { name: 'XAU/USD', weight: '35.2%', return: '+18.9%', sector: 'Precious Metals' },
-        { name: 'EUR/USD', weight: '22.1%', return: '+6.7%', sector: 'Currency' },
-        { name: 'GLD', weight: '15.8%', return: '+14.2%', sector: 'Commodities' }
-      ],
-      sector: [
-        { name: 'Precious Metals', value: 50 },
-        { name: 'Currency', value: 30 },
-        { name: 'Commodities', value: 20 }
-      ],
-      geography: [
-        { name: 'Global', value: 60 },
-        { name: 'USA', value: 25 },
-        { name: 'Europe', value: 15 }
-      ],
-      assetType: [
-        { name: 'Currency Pair', value: 45 },
-        { name: 'Precious Metals', value: 35 },
-        { name: 'Cash', value: 20 }
-      ]
-    }
+const Analytics: React.FC<AnalyticsProps> = ({ 
+  performanceHistory, 
+  portfolios, 
+  transactions 
+}) => {
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR'
+    }).format(value);
   };
 
+  const formatPercent = (value: number) => {
+    return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+  };
 
+  // Calculate analytics data
+  const analyticsData = useMemo(() => {
+    const totalValue = Object.values(portfolios).reduce((sum, p) => sum + p.totalValue, 0);
+    const totalGainLoss = Object.values(portfolios).reduce((sum, p) => sum + p.totalGainLoss, 0);
+    const totalGainLossPercent = totalValue > 0 ? (totalGainLoss / (totalValue - totalGainLoss)) * 100 : 0;
 
-  const currentData = portfolioData[activeTab as keyof typeof portfolioData];
+    // Monthly performance data
+    const monthlyData = performanceHistory.slice(-12).map(point => ({
+      month: new Date(point.date).toLocaleDateString('fr-FR', { month: 'short' }),
+      performance: point.nav,
+      benchmark: point.benchmark,
+      value: point.portfolioValue
+    }));
+
+    // Portfolio allocation
+    const allocationData = Object.values(portfolios).map(portfolio => ({
+      name: portfolio.name,
+      value: portfolio.totalValue,
+      percentage: (portfolio.totalValue / totalValue) * 100,
+      color: portfolio.type === PortfolioType.PHRONESIS ? '#3b82f6' : '#10b981'
+    }));
+
+    // Asset type distribution
+    const assetTypes = new Map<string, number>();
+    Object.values(portfolios).forEach(portfolio => {
+      portfolio.holdings.forEach(holding => {
+        const current = assetTypes.get(holding.assetType) || 0;
+        assetTypes.set(holding.assetType, current + holding.marketValue);
+      });
+    });
+
+    const assetDistribution = Array.from(assetTypes.entries()).map(([type, value]) => ({
+      name: type.charAt(0).toUpperCase() + type.slice(1),
+      value,
+      percentage: (value / totalValue) * 100
+    }));
+
+    // Transaction volume by month
+    const transactionsByMonth = new Map<string, { deposits: number; withdrawals: number; trades: number }>();
+    transactions.forEach(transaction => {
+      const month = new Date(transaction.date).toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
+      const current = transactionsByMonth.get(month) || { deposits: 0, withdrawals: 0, trades: 0 };
+      
+      if (transaction.type === TransactionType.DEPOSIT) {
+        current.deposits += transaction.amount;
+      } else if (transaction.type === TransactionType.WITHDRAWAL) {
+        current.withdrawals += transaction.amount;
+      } else if ([TransactionType.BUY, TransactionType.SELL].includes(transaction.type)) {
+        current.trades += Math.abs(transaction.amount);
+      }
+      
+      transactionsByMonth.set(month, current);
+    });
+
+    const transactionVolumeData = Array.from(transactionsByMonth.entries())
+      .slice(-6)
+      .map(([month, data]) => ({
+        month,
+        deposits: data.deposits,
+        withdrawals: data.withdrawals,
+        trades: data.trades
+      }));
+
+    return {
+      totalValue,
+      totalGainLoss,
+      totalGainLossPercent,
+      monthlyData,
+      allocationData,
+      assetDistribution,
+      transactionVolumeData
+    };
+  }, [performanceHistory, portfolios, transactions]);
+
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6"
-    >
+    <div className="space-y-6">
       {/* Header */}
-      <motion.div 
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.4, delay: 0.05 }}
-        className="mb-8"
-      >
-        <div className="flex items-center space-x-3 mb-4">
-          <div className="flex items-center justify-center w-12 h-12 bg-white rounded-xl shadow-lg p-1">
-            <img src="/PHRONESIS - Bleue.png" alt="Phronesis Capital" className="w-10 h-10 object-contain" />
-          </div>
-          <div>
-            <motion.h1 
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-              className="text-3xl font-bold text-gray-900 dark:text-white"
-            >
-              Portfolio Analytics
-            </motion.h1>
-            <motion.p 
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.15 }}
-              className="text-gray-600 dark:text-gray-400"
-            >
-              Analyse détaillée des performances et allocations
-            </motion.p>
-          </div>
-        </div>
-        
-        {/* Tabs */}
-        <motion.div 
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-          className="flex space-x-2"
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          Analytics
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">
+          Analyses détaillées des performances et de la répartition
+        </p>
+      </div>
+
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="card p-6"
         >
-          {['Combined', 'Phronesis', 'FlagShip'].map((tab, index) => (
-            <motion.button
-              key={tab}
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.3, delay: 0.25 + index * 0.05 }}
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setActiveTab(tab)}
-              className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all shadow-lg ${
-                activeTab === tab
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-blue-500/25'
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
-              }`}
-            >
-              {tab}
-            </motion.button>
-          ))}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Valeur totale
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
+                {formatCurrency(analyticsData.totalValue)}
+              </p>
+            </div>
+            <div className="p-3 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
+              <DollarSign className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+            </div>
+          </div>
         </motion.div>
-      </motion.div>
 
-      {/* Key Metrics Cards */}
-      <motion.div 
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.3, delay: 0.4 }}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-      >
-        {[
-          { label: 'Total Return', value: currentData.metrics.totalReturn, change: currentData.metrics.totalReturnChange, icon: TrendingUp, color: 'green' },
-          { label: 'Alpha', value: currentData.metrics.alpha, change: currentData.metrics.alphaChange, icon: Target, color: 'blue' },
-          { label: 'Expense Ratio', value: currentData.metrics.expenseRatio, change: currentData.metrics.expenseChange, icon: DollarSign, color: 'gray' },
-          { label: 'Tracking Error', value: currentData.metrics.trackingError, change: currentData.metrics.trackingChange, icon: BarChart3, color: 'orange' }
-        ].map((metric, index) => (
-          <motion.div
-            key={index}
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.45 + index * 0.05 }}
-            whileHover={{ scale: 1.02, y: -2 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <metric.icon className={`w-5 h-5 ${
-                metric.color === 'green' ? 'text-green-500' :
-                metric.color === 'blue' ? 'text-blue-500' :
-                metric.color === 'orange' ? 'text-orange-500' : 'text-gray-500'
-              }`} />
-              <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                metric.change.startsWith('+') ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
-              }`}>
-                {metric.change}
-              </span>
-            </div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{metric.value}</div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">{metric.label}</div>
-          </motion.div>
-        ))}
-      </motion.div>
-
-      {/* Performance Chart */}
-      <motion.div 
-        initial={{ y: 30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.3, delay: 0.65 }}
-        className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-lg mb-8"
-      >
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
-            <TrendingUp className="w-4 h-4 text-white" />
-          </div>
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white">Performance vs Benchmark</h3>
-          <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-full">
-            YTD
-          </span>
-        </div>
-        
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={currentData.performance}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-            <XAxis 
-              dataKey="month" 
-              tick={{ fill: '#9ca3af', fontSize: 12 }}
-              axisLine={{ stroke: '#374151' }}
-            />
-            <YAxis 
-              tick={{ fill: '#9ca3af', fontSize: 12 }}
-              axisLine={{ stroke: '#374151' }}
-              tickFormatter={(value) => `${value}%`}
-            />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: '#1f2937', 
-                border: '1px solid #374151',
-                borderRadius: '8px',
-                color: '#f3f4f6'
-              }}
-              formatter={(value) => [`${value}%`, '']}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="portfolio" 
-              stroke="#3b82f6" 
-              strokeWidth={3}
-              name="Portfolio"
-              dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="benchmark" 
-              stroke="#6b7280" 
-              strokeWidth={2}
-              strokeDasharray="5 5"
-              name="Benchmark"
-              dot={{ fill: '#6b7280', strokeWidth: 2, r: 3 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </motion.div>
-
-      {/* Allocation Charts Grid */}
-      <motion.div 
-        initial={{ y: 30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.3, delay: 0.7 }}
-        className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8"
-      >
-        {/* By Sector */}
-        <motion.div 
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.3, delay: 0.75 }}
-          whileHover={{ scale: 1.02, y: -3 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all"
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="card p-6"
         >
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-gray-500 to-gray-600 rounded-lg">
-              <BarChart3 className="w-4 h-4 text-white" />
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Performance
+              </p>
+              <p className={`text-2xl font-bold mt-2 ${
+                analyticsData.totalGainLossPercent >= 0 ? 'text-success-600' : 'text-danger-600'
+              }`}>
+                {formatPercent(analyticsData.totalGainLossPercent)}
+              </p>
             </div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">By Sector</h3>
+            <div className={`p-3 rounded-xl ${
+              analyticsData.totalGainLossPercent >= 0 
+                ? 'bg-success-100 dark:bg-success-900/20' 
+                : 'bg-danger-100 dark:bg-danger-900/20'
+            }`}>
+              {analyticsData.totalGainLossPercent >= 0 ? (
+                <TrendingUp className="w-6 h-6 text-success-600 dark:text-success-400" />
+              ) : (
+                <TrendingDown className="w-6 h-6 text-danger-600 dark:text-danger-400" />
+              )}
+            </div>
           </div>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={currentData.sector} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis 
-                dataKey="name" 
-                tick={{ fill: '#9ca3af', fontSize: 10 }}
-                axisLine={{ stroke: '#374151' }}
-                angle={-45}
-                textAnchor="end"
-                height={80}
-              />
-              <YAxis 
-                tick={{ fill: '#9ca3af', fontSize: 10 }}
-                axisLine={{ stroke: '#374151' }}
-                domain={[0, 60]}
-                tickFormatter={(value) => `${value}%`}
-              />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="card p-6"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Gain/Perte
+              </p>
+              <p className={`text-2xl font-bold mt-2 ${
+                analyticsData.totalGainLoss >= 0 ? 'text-success-600' : 'text-danger-600'
+              }`}>
+                {formatCurrency(analyticsData.totalGainLoss)}
+              </p>
+            </div>
+            <div className="p-3 bg-warning-100 dark:bg-warning-900/20 rounded-xl">
+              <Target className="w-6 h-6 text-warning-600 dark:text-warning-400" />
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="card p-6"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Positions
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
+                {Object.values(portfolios).reduce((sum, p) => sum + p.holdings.length, 0)}
+              </p>
+            </div>
+            <div className="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-xl">
+              <Activity className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Performance Chart */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="card p-6"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Performance mensuelle
+            </h3>
+            <BarChart3 className="w-5 h-5 text-gray-400" />
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={analyticsData.monthlyData}>
+              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
               <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#1f2937', 
-                  border: '1px solid #374151',
-                  borderRadius: '6px',
-                  color: '#f3f4f6'
-                }}
-                formatter={(value) => [`${value}%`, 'Allocation']}
+                formatter={(value: any, name: string) => [
+                  name === 'performance' ? `${value.toFixed(2)}%` : formatCurrency(value),
+                  name === 'performance' ? 'Performance' : name === 'benchmark' ? 'Benchmark' : 'Valeur'
+                ]}
               />
-              <Bar 
-                dataKey="value" 
+              <Area 
+                type="monotone" 
+                dataKey="performance" 
+                stroke="#3b82f6" 
                 fill="#3b82f6" 
-                radius={[4, 4, 0, 0]}
+                fillOpacity={0.1}
+                strokeWidth={2}
               />
-            </BarChart>
+              <Area 
+                type="monotone" 
+                dataKey="benchmark" 
+                stroke="#6b7280" 
+                fill="#6b7280" 
+                fillOpacity={0.05}
+                strokeWidth={2}
+                strokeDasharray="5 5"
+              />
+            </AreaChart>
           </ResponsiveContainer>
         </motion.div>
 
-        {/* By Geography */}
-        <motion.div 
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.3, delay: 0.8 }}
-          whileHover={{ scale: 1.02, y: -3 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all"
+        {/* Portfolio Allocation */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="card p-6"
         >
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
-              <PieChartIcon className="w-4 h-4 text-white" />
-            </div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">By Geography</h3>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Répartition des portefeuilles
+            </h3>
+            <PieChartIcon className="w-5 h-5 text-gray-400" />
           </div>
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
-                data={currentData.geography}
+                data={analyticsData.allocationData}
                 cx="50%"
                 cy="50%"
-                outerRadius={80}
+                innerRadius={60}
+                outerRadius={120}
+                paddingAngle={5}
                 dataKey="value"
-                stroke="#ffffff"
-                strokeWidth={2}
               >
-                {currentData.geography.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={['#3b82f6', '#60a5fa', '#93c5fd', '#dbeafe'][index]} />
+                {analyticsData.allocationData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#1f2937', 
-                  border: '1px solid #374151',
-                  borderRadius: '6px',
-                  color: '#f3f4f6'
-                }}
-                formatter={(value) => [`${value}%`, 'Allocation']}
-              />
+              <Tooltip formatter={(value: any) => formatCurrency(value)} />
             </PieChart>
           </ResponsiveContainer>
-          <div className="grid grid-cols-2 gap-2 mt-4">
-            {currentData.geography.map((item, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <div 
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: ['#3b82f6', '#60a5fa', '#93c5fd', '#dbeafe'][index] }}
-                />
-                <span className="text-xs text-gray-600 dark:text-gray-400">{item.name}</span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* By Asset Type */}
-        <motion.div 
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.3, delay: 0.85 }}
-          whileHover={{ scale: 1.02, y: -3 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all"
-        >
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-gray-500 to-gray-600 rounded-lg">
-              <Target className="w-4 h-4 text-white" />
-            </div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">By Asset Type</h3>
-          </div>
-          <div className="space-y-3">
-            {currentData.assetType.map((item, index) => (
+          <div className="mt-4 space-y-2">
+            {analyticsData.allocationData.map((item, index) => (
               <div key={index} className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{item.name}</span>
-                <div className="flex items-center space-x-2">
-                  <div className="w-20 bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(item.value / 50) * 100}%` }}
-                      transition={{ duration: 0.6, delay: 0.9 + index * 0.1 }}
-                      className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full"
-                    />
-                  </div>
-                  <span className="text-sm font-bold text-blue-600 dark:text-blue-400 w-10 text-right">
-                    {item.value}%
+                <div className="flex items-center">
+                  <div 
+                    className="w-3 h-3 rounded-full mr-3"
+                    style={{ backgroundColor: item.color }}
+                  ></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {item.name}
                   </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    {formatCurrency(item.value)}
+                  </span>
+                  <div className="text-xs text-gray-500">
+                    {item.percentage.toFixed(1)}%
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </motion.div>
-      </motion.div>
 
-      {/* Holdings Analysis */}
-      <motion.div 
-        initial={{ y: 30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.3, delay: 0.9 }}
-        className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-lg"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
-              <BarChart3 className="w-4 h-4 text-white" />
+        {/* Asset Distribution */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="card p-6"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+            Répartition par type d'actif
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={analyticsData.assetDistribution} layout="horizontal">
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis type="number" tick={{ fontSize: 12 }} />
+              <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={80} />
+              <Tooltip formatter={(value: any) => formatCurrency(value)} />
+              <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </motion.div>
+
+        {/* Transaction Volume */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="card p-6"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+            Volume des transactions
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={analyticsData.transactionVolumeData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value: any) => formatCurrency(value)} />
+              <Bar dataKey="deposits" stackId="a" fill="#10b981" name="Dépôts" />
+              <Bar dataKey="withdrawals" stackId="a" fill="#ef4444" name="Retraits" />
+              <Bar dataKey="trades" stackId="a" fill="#3b82f6" name="Trades" />
+            </BarChart>
+          </ResponsiveContainer>
+          <div className="mt-4 flex items-center justify-center space-x-6 text-sm">
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-success-500 rounded-full mr-2"></div>
+              <span className="text-gray-600 dark:text-gray-400">Dépôts</span>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white">Top Holdings Analysis</h3>
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-danger-500 rounded-full mr-2"></div>
+              <span className="text-gray-600 dark:text-gray-400">Retraits</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-primary-500 rounded-full mr-2"></div>
+              <span className="text-gray-600 dark:text-gray-400">Trades</span>
+            </div>
           </div>
-          <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-full">
-            {activeTab.toUpperCase()}
-          </span>
-        </div>
-        
+        </motion.div>
+      </div>
+
+      {/* Performance Summary */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="card p-6"
+      >
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+          Résumé des performances
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {currentData.holdings.map((holding, index) => (
-            <motion.div
-              key={index}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.3, delay: 0.95 + index * 0.05 }}
-              className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-bold text-gray-900 dark:text-white">{holding.name}</span>
-                <span className="text-sm font-medium text-blue-600 dark:text-blue-400">{holding.weight}</span>
+          {Object.values(portfolios).map((portfolio, index) => (
+            <div key={portfolio.id} className="text-center">
+              <div className={`inline-flex p-3 rounded-xl mb-3 ${
+                portfolio.type === PortfolioType.PHRONESIS
+                  ? 'bg-primary-100 dark:bg-primary-900/20'
+                  : 'bg-success-100 dark:bg-success-900/20'
+              }`}>
+                <Activity className={`w-6 h-6 ${
+                  portfolio.type === PortfolioType.PHRONESIS
+                    ? 'text-primary-600 dark:text-primary-400'
+                    : 'text-success-600 dark:text-success-400'
+                }`} />
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600 dark:text-gray-400">{holding.sector}</span>
-                <span className="text-green-600 dark:text-green-400 font-medium">{holding.return}</span>
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                {portfolio.name}
+              </h4>
+              <div className="space-y-2">
+                <div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Valeur: </span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {formatCurrency(portfolio.totalValue)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Performance: </span>
+                  <span className={`font-medium ${
+                    portfolio.totalGainLossPercent >= 0 ? 'text-success-600' : 'text-danger-600'
+                  }`}>
+                    {formatPercent(portfolio.totalGainLossPercent)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Positions: </span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {portfolio.holdings.length}
+                  </span>
+                </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </motion.div>
-    </motion.div>
+    </div>
   );
 };
 

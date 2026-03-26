@@ -53,7 +53,7 @@ const AppContent: React.FC = () => {
                       <Route path="/portfolio" element={<PortfolioSimple />} />
                       <Route path="/transactions" element={<Transactions />} />
                       <Route path="/members" element={<Members />} />
-                      <Route path="/analytics" element={<Analytics />} />
+                      <Route path="/analytics" element={<Analytics performanceHistory={clubData.performanceHistory} portfolios={clubData.portfolios} transactions={clubData.transactions} />} />
                       <Route path="/track-record" element={<TrackRecord />} />
                       <Route path="/risk" element={<Risk />} />
                       <Route path="/stress-test" element={<StressTest />} />
