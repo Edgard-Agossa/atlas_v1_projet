@@ -626,8 +626,7 @@ class MemberInvestmentsView(APIView):
             
             # Filtrer uniquement les comptes de l'utilisateur connecté
             comptes = Compte_member.objects.filter(
-                member=request.user,
-                is_active=True
+                member=request.user
             ).select_related('portfolio', 'member')
             
             print(f"User: {request.user.email}, Comptes trouvés: {comptes.count()}")
