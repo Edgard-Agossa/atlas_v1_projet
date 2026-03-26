@@ -21,12 +21,12 @@ import {
   TrendingDown,
   Target,
   Activity,
-  Calendar,
   DollarSign,
   BarChart3,
   PieChart as PieChartIcon
 } from 'lucide-react';
 import { PerformanceDataPoint, Portfolio, PortfolioType, Transaction, TransactionType } from '../types';
+import StatCard from '../components/ui/StatCard';
 
 interface AnalyticsProps {
   performanceHistory: PerformanceDataPoint[];
@@ -140,100 +140,38 @@ const Analytics: React.FC<AnalyticsProps> = ({
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="card p-6"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Valeur totale
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-                {formatCurrency(analyticsData.totalValue)}
-              </p>
-            </div>
-            <div className="p-3 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-              <DollarSign className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="card p-6"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Performance
-              </p>
-              <p className={`text-2xl font-bold mt-2 ${
-                analyticsData.totalGainLossPercent >= 0 ? 'text-success-600' : 'text-danger-600'
-              }`}>
-                {formatPercent(analyticsData.totalGainLossPercent)}
-              </p>
-            </div>
-            <div className={`p-3 rounded-xl ${
-              analyticsData.totalGainLossPercent >= 0 
-                ? 'bg-success-100 dark:bg-success-900/20' 
-                : 'bg-danger-100 dark:bg-danger-900/20'
-            }`}>
-              {analyticsData.totalGainLossPercent >= 0 ? (
-                <TrendingUp className="w-6 h-6 text-success-600 dark:text-success-400" />
-              ) : (
-                <TrendingDown className="w-6 h-6 text-danger-600 dark:text-danger-400" />
-              )}
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="card p-6"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Gain/Perte
-              </p>
-              <p className={`text-2xl font-bold mt-2 ${
-                analyticsData.totalGainLoss >= 0 ? 'text-success-600' : 'text-danger-600'
-              }`}>
-                {formatCurrency(analyticsData.totalGainLoss)}
-              </p>
-            </div>
-            <div className="p-3 bg-warning-100 dark:bg-warning-900/20 rounded-xl">
-              <Target className="w-6 h-6 text-warning-600 dark:text-warning-400" />
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="card p-6"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Positions
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-                {Object.values(portfolios).reduce((sum, p) => sum + p.holdings.length, 0)}
-              </p>
-            </div>
-            <div className="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-xl">
-              <Activity className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-            </div>
-          </div>
-        </motion.div>
+        <StatCard
+          label="Valeur totale"
+          value={formatCurrency(analyticsData.totalValue)}
+          icon={DollarSign}
+          delay={0}
+        />
+        <StatCard
+          label="Performance"
+          value={formatPercent(analyticsData.totalGainLossPercent)}
+          icon={analyticsData.totalGainLossPercent >= 0 ? TrendingUp : TrendingDown}
+          iconBg={analyticsData.totalGainLossPercent >= 0 ? 'bg-success-100 dark:bg-success-900/20' : 'bg-danger-100 dark:bg-danger-900/20'}
+          iconColor={analyticsData.totalGainLossPercent >= 0 ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400'}
+          valueColor={analyticsData.totalGainLossPercent >= 0 ? 'text-success-600' : 'text-danger-600'}
+          delay={0.1}
+        />
+        <StatCard
+          label="Gain/Perte"
+          value={formatCurrency(analyticsData.totalGainLoss)}
+          icon={Target}
+          iconBg="bg-warning-100 dark:bg-warning-900/20"
+          iconColor="text-warning-600 dark:text-warning-400"
+          valueColor={analyticsData.totalGainLoss >= 0 ? 'text-success-600' : 'text-danger-600'}
+          delay={0.2}
+        />
+        <StatCard
+          label="Positions"
+          value={Object.values(portfolios).reduce((sum, p) => sum + p.holdings.length, 0)}
+          icon={Activity}
+          iconBg="bg-purple-100 dark:bg-purple-900/20"
+          iconColor="text-purple-600 dark:text-purple-400"
+          delay={0.3}
+        />
       </div>
 
       {/* Charts Grid */}

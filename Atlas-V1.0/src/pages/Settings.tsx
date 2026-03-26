@@ -20,6 +20,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import Toggle from '../components/ui/Toggle';
 
 const Settings: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -140,97 +141,30 @@ const Settings: React.FC = () => {
                 Préférences de notification
               </h3>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">
-                      Notifications par email
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Recevoir les notifications importantes par email
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => handleInputChange('emailNotifications', !formData.emailNotifications)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      formData.emailNotifications ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-700'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        formData.emailNotifications ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">
-                      Notifications push
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Recevoir les notifications en temps réel
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => handleInputChange('pushNotifications', !formData.pushNotifications)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      formData.pushNotifications ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-700'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        formData.pushNotifications ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">
-                      Rapports hebdomadaires
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Recevoir un résumé hebdomadaire des performances
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => handleInputChange('weeklyReports', !formData.weeklyReports)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      formData.weeklyReports ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-700'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        formData.weeklyReports ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">
-                      Alertes de transaction
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Être notifié lors de nouvelles transactions
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => handleInputChange('transactionAlerts', !formData.transactionAlerts)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      formData.transactionAlerts ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-700'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        formData.transactionAlerts ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
+                <Toggle
+                  checked={formData.emailNotifications}
+                  onChange={(v) => handleInputChange('emailNotifications', v)}
+                  label="Notifications par email"
+                  description="Recevoir les notifications importantes par email"
+                />
+                <Toggle
+                  checked={formData.pushNotifications}
+                  onChange={(v) => handleInputChange('pushNotifications', v)}
+                  label="Notifications push"
+                  description="Recevoir les notifications en temps réel"
+                />
+                <Toggle
+                  checked={formData.weeklyReports}
+                  onChange={(v) => handleInputChange('weeklyReports', v)}
+                  label="Rapports hebdomadaires"
+                  description="Recevoir un résumé hebdomadaire des performances"
+                />
+                <Toggle
+                  checked={formData.transactionAlerts}
+                  onChange={(v) => handleInputChange('transactionAlerts', v)}
+                  label="Alertes de transaction"
+                  description="Être notifié lors de nouvelles transactions"
+                />
               </div>
             </div>
           </div>
@@ -299,28 +233,12 @@ const Settings: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">
-                      Authentification à deux facteurs
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Ajouter une couche de sécurité supplémentaire
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => handleInputChange('twoFactorAuth', !formData.twoFactorAuth)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      formData.twoFactorAuth ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-700'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        formData.twoFactorAuth ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
+                <Toggle
+                  checked={formData.twoFactorAuth}
+                  onChange={(v) => handleInputChange('twoFactorAuth', v)}
+                  label="Authentification à deux facteurs"
+                  description="Ajouter une couche de sécurité supplémentaire"
+                />
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -351,28 +269,12 @@ const Settings: React.FC = () => {
                 Préférences d'affichage
               </h3>
               <div className="space-y-6">
-                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">
-                      Mode sombre
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Basculer entre le thème clair et sombre
-                    </p>
-                  </div>
-                  <button
-                    onClick={toggleTheme}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      theme === 'dark' ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-700'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
+                <Toggle
+                  checked={theme === 'dark'}
+                  onChange={toggleTheme}
+                  label="Mode sombre"
+                  description="Basculer entre le thème clair et sombre"
+                />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>

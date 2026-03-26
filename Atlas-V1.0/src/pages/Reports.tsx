@@ -15,6 +15,8 @@ import {
   PieChart
 } from 'lucide-react';
 import { Portfolio, PortfolioType, Transaction, Member, PerformanceDataPoint } from '../types';
+import StatCard from '../components/ui/StatCard';
+import Badge from '../components/ui/Badge';
 
 interface ReportsProps {
   portfolios: { [key in PortfolioType]: Portfolio };
@@ -153,58 +155,31 @@ const Reports: React.FC<ReportsProps> = ({
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'performance':
-        return <TrendingUp className="w-5 h-5" />;
-      case 'portfolio':
-        return <PieChart className="w-5 h-5" />;
-      case 'members':
-        return <Users className="w-5 h-5" />;
-      case 'transactions':
-        return <Activity className="w-5 h-5" />;
-      default:
-        return <FileText className="w-5 h-5" />;
+      case 'performance': return <TrendingUp className="w-5 h-5" />;
+      case 'portfolio':   return <PieChart className="w-5 h-5" />;
+      case 'members':     return <Users className="w-5 h-5" />;
+      case 'transactions':return <Activity className="w-5 h-5" />;
+      default:            return <FileText className="w-5 h-5" />;
     }
   };
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'performance':
-        return 'bg-success-100 text-success-800 dark:bg-success-900/20 dark:text-success-300';
-      case 'portfolio':
-        return 'bg-primary-100 text-primary-800 dark:bg-primary-900/20 dark:text-primary-300';
-      case 'members':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300';
-      case 'transactions':
-        return 'bg-warning-100 text-warning-800 dark:bg-warning-900/20 dark:text-warning-300';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
-    }
+  const getCategoryBadgeVariant = (category: string): 'success' | 'primary' | 'purple' | 'warning' | 'gray' => {
+    const map: Record<string, 'success' | 'primary' | 'purple' | 'warning' | 'gray'> = {
+      performance: 'success', portfolio: 'primary', members: 'purple', transactions: 'warning',
+    };
+    return map[category] || 'gray';
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'generated':
-        return 'bg-success-100 text-success-800 dark:bg-success-900/20 dark:text-success-300';
-      case 'generating':
-        return 'bg-warning-100 text-warning-800 dark:bg-warning-900/20 dark:text-warning-300';
-      case 'scheduled':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
-    }
+  const getStatusBadgeVariant = (status: string): 'success' | 'warning' | 'gray' => {
+    const map: Record<string, 'success' | 'warning' | 'gray'> = {
+      generated: 'success', generating: 'warning', scheduled: 'gray',
+    };
+    return map[status] || 'gray';
   };
 
   const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'generated':
-        return 'Généré';
-      case 'generating':
-        return 'En cours';
-      case 'scheduled':
-        return 'Programmé';
-      default:
-        return status;
-    }
+    const map: Record<string, string> = { generated: 'Généré', generating: 'En cours', scheduled: 'Programmé' };
+    return map[status] || status;
   };
 
   return (
@@ -233,88 +208,10 @@ const Reports: React.FC<ReportsProps> = ({
 
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="card p-6"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Valeur totale
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-                {formatCurrency(summaryStats.totalValue)}
-              </p>
-            </div>
-            <div className="p-3 bg-primary-100 dark:bg-primary-900/20 rounded-xl">
-              <DollarSign className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="card p-6"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Membres actifs
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-                {summaryStats.activeMembers}
-              </p>
-            </div>
-            <div className="p-3 bg-success-100 dark:bg-success-900/20 rounded-xl">
-              <Users className="w-6 h-6 text-success-600 dark:text-success-400" />
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="card p-6"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Transactions ce mois
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-                {summaryStats.monthlyTransactions}
-              </p>
-            </div>
-            <div className="p-3 bg-warning-100 dark:bg-warning-900/20 rounded-xl">
-              <Activity className="w-6 h-6 text-warning-600 dark:text-warning-400" />
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="card p-6"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Rapports générés
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-                {summaryStats.generatedReports}
-              </p>
-            </div>
-            <div className="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-xl">
-              <BarChart3 className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-            </div>
-          </div>
-        </motion.div>
+        <StatCard label="Valeur totale" value={formatCurrency(summaryStats.totalValue)} icon={DollarSign} delay={0} />
+        <StatCard label="Membres actifs" value={summaryStats.activeMembers} icon={Users} iconBg="bg-success-100 dark:bg-success-900/20" iconColor="text-success-600 dark:text-success-400" delay={0.1} />
+        <StatCard label="Transactions ce mois" value={summaryStats.monthlyTransactions} icon={Activity} iconBg="bg-warning-100 dark:bg-warning-900/20" iconColor="text-warning-600 dark:text-warning-400" delay={0.2} />
+        <StatCard label="Rapports générés" value={summaryStats.generatedReports} icon={BarChart3} iconBg="bg-purple-100 dark:bg-purple-900/20" iconColor="text-purple-600 dark:text-purple-400" delay={0.3} />
       </div>
 
       {/* Filters */}
@@ -360,12 +257,10 @@ const Reports: React.FC<ReportsProps> = ({
             className="card p-6 hover:shadow-lg transition-shadow"
           >
             <div className="flex items-start justify-between mb-4">
-              <div className={`p-2 rounded-lg ${getCategoryColor(report.category)}`}>
+              <div className={`p-2 rounded-lg ${getCategoryBadgeVariant(report.category) === 'success' ? 'bg-success-100 text-success-800 dark:bg-success-900/20 dark:text-success-300' : getCategoryBadgeVariant(report.category) === 'primary' ? 'bg-primary-100 text-primary-800 dark:bg-primary-900/20 dark:text-primary-300' : getCategoryBadgeVariant(report.category) === 'purple' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300' : 'bg-warning-100 text-warning-800 dark:bg-warning-900/20 dark:text-warning-300'}`}>
                 {getCategoryIcon(report.category)}
               </div>
-              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(report.status)}`}>
-                {getStatusLabel(report.status)}
-              </span>
+              <Badge label={getStatusLabel(report.status)} variant={getStatusBadgeVariant(report.status)} />
             </div>
             
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">

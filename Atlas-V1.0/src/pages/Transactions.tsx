@@ -4,6 +4,7 @@ import CryptoPaymentModal from '../components/CryptoPaymentModal';
 import AddTransactionModal from '../components/AddTransactionModal';
 import MomoPaymentModal from '../components/MomoPaymentModal';
 import NotificationModal from '../components/NotificationModal';
+import Badge from '../components/ui/Badge';
 import { Wallet, Plus, Smartphone } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -37,24 +38,15 @@ useEffect(() => {
 
 console.log(portfolio)
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'BUY':
-        return 'bg-blue-600 text-white';
-      case 'SELL':
-        return 'bg-orange-600 text-white';
-      case 'DEPOSIT':
-        return 'bg-green-600 text-white';
-      case 'WITHDRAWAL':
-        return 'bg-red-600 text-white';
-      default:
-        return 'bg-gray-600 text-white';
-    }
+  const getTypeBadgeVariant = (type: string): 'blue' | 'orange' | 'success' | 'danger' | 'gray' => {
+    const map: Record<string, 'blue' | 'orange' | 'success' | 'danger' | 'gray'> = {
+      BUY: 'blue', SELL: 'orange', DEPOSIT: 'success', WITHDRAWAL: 'danger',
+    };
+    return map[type] || 'gray';
   };
 
-  const getPortfolioColor = (portfolio: string) => {
-    return portfolio === 'PHRONESIS' ? 'bg-blue-600 text-white' : 'bg-teal-600 text-white';
-  };
+  const getPortfolioBadgeVariant = (portfolio: string): 'blue' | 'teal' =>
+    portfolio === 'PHRONESIS' ? 'blue' : 'teal';
 
   return (
     <motion.div 
@@ -247,14 +239,10 @@ console.log(portfolio)
                       {transaction.date_heure}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getTypeColor(transaction.type)}`}>
-                        {transaction.type}
-                      </span>
+                      <Badge label={transaction.type} variant={getTypeBadgeVariant(transaction.type)} />
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getPortfolioColor(transaction.portfolio)}`}>
-                        {transaction.portfolio}
-                      </span>
+                      <Badge label={transaction.portfolio} variant={getPortfolioBadgeVariant(transaction.portfolio)} />
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {transaction.description}
