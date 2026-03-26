@@ -4,19 +4,18 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from .models import Compte_member, Portfolio
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
+
 
 User = get_user_model()
 
 class AssetUploadView(APIView):
-    # AllowAny permet de tester sans token si ton middleware ne bloque pas en amont
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        # Debug pour voir si l'utilisateur est reconnu (utile pour tes tests)
-        print(f"User authenticated: {request.user.is_authenticated}")
-        
+  
         file = request.FILES.get('file')
+        
         target_sheet = request.data.get('sheet_name', 'Table_Membre')
         ALLOWED_SHEETS = ['Table_Membre', 'Portfolio', 'Transactions']
         
@@ -100,6 +99,5 @@ class AssetUploadView(APIView):
             }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
-            # Debug console pour voir l'erreur précise en cas de crash
             print(f"Erreur d'import : {str(e)}")
             return Response({"error": str(e)}, status=500)
