@@ -14,49 +14,35 @@ import {
   Lock,
   Upload
 } from 'lucide-react';
-import { useHoldingDataSimple } from '../hooks/useHoldingDataSimple';
+import { useAppStore } from '../store/useAppStore';
 import AddAssetModalSimple from '../components/AddAssetModalSimple';
 import { useAuth } from '../contexts/AuthContext';
 import ExcelUploadModal from '../components/ExcelUploadModal';
 
 const PortfolioSimple: React.FC = () => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const { holdings, loading, error, createHolding, updateHolding, deleteHolding } = useHoldingDataSimple();
+  const {
+    holdings,
+    memberInvestments,
+    loadingHoldings,
+    errorHoldings,
+    fetchHoldings,
+    fetchMemberInvestments,
+    createHolding,
+    deleteHolding,
+  } = useAppStore();
+  const loading = loadingHoldings;
+  const error = errorHoldings;
   const [isAddAssetModalOpen, setIsAddAssetModalOpen] = useState(false);
   const [selectedPortfolio, setSelectedPortfolio] = useState<'ALL' | 'PHRONESIS' | 'FLAGSHIP'>('ALL');
   const [sortBy, setSortBy] = useState<'value' | 'gain' | 'symbol'>('value');
   const [showFilters, setShowFilters] = useState(false);
   const { user } = useAuth();
 
-  // --- DONNÉES EN DUR POUR LE MEMBRE (Mock Data) ---
-
-  const [memberInvestments, setMemberInvestments] = useState<any[]>([]);
-
   useEffect(() => {
-    const fetchInvestments = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        console.log('Token:', token ? 'Présent' : 'Absent');
-
-        const response = await fetch('http://127.0.0.1:8080/api/investment/member/investments/', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        console.log('Response status:', response.status);
-        const data = await response.json();
-        console.log('Données reçues:', data);
-
-        if (data.success) {
-          console.log('Nombre d\'investissements:', data.investments.length);
-          setMemberInvestments(data.investments);
-        }
-      } catch (error) {
-        console.error('Erreur:', error);
-      }
-    };
-
-    fetchInvestments();
-  }, []);
+    fetchHoldings();
+    fetchMemberInvestments();
+  }, [fetchHoldings, fetchMemberInvestments]);
 
   const handleAddAsset = async (assetData: any) => {
     try {
@@ -68,7 +54,6 @@ const PortfolioSimple: React.FC = () => {
       window.alert(`Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     }
   };
-
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
@@ -119,7 +104,6 @@ const PortfolioSimple: React.FC = () => {
       }
     }
   };
-
   const handleTogglePublic = (holding: any) => {
     console.log('Toggle public:', holding);
     // TODO: Implémenter toggle public

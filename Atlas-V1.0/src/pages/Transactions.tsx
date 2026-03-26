@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {AccountService,Transaction, Prtfolios} from '../contexts/DataUrl';
+import { useAppStore } from '../store/useAppStore';
 import CryptoPaymentModal from '../components/CryptoPaymentModal';
 import AddTransactionModal from '../components/AddTransactionModal';
 import MomoPaymentModal from '../components/MomoPaymentModal';
@@ -9,34 +9,17 @@ import { Wallet, Plus, Smartphone } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Transactions: React.FC = () => {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [portfolio, setPortfolio] = useState<Prtfolios[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { transactions, portfolios, loadingTransactions, fetchTransactions, fetchPortfolios } = useAppStore();
   const [showCryptoModal, setShowCryptoModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showMomoModal, setShowMomoModal] = useState(false);
   const [showAllTransactions, setShowAllTransactions] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'warning'; message: string } | null>(null);
-  const fetcTransactions = async () => {
-    setLoading(true);
-    try {
-     const data =  await AccountService.getAllTransactions();
-     //Méthode pour la récupération des portfolios
-     const portfoliosData = await AccountService.getAllPortfolios();
-     setTransactions(data.transactions || []);
-     setPortfolio(Array.isArray(portfoliosData) ? portfoliosData : [])
 
-  } catch (error) {
-    console.error('Erreur:', error);
-  } finally {
-    setLoading(false);
-  }
-};
-useEffect(() => {
-  fetcTransactions();
-}, []);
-
-console.log(portfolio)
+  useEffect(() => {
+    fetchTransactions();
+    fetchPortfolios();
+  }, [fetchTransactions, fetchPortfolios]);
 
   const getTypeBadgeVariant = (type: string): 'blue' | 'orange' | 'success' | 'danger' | 'gray' => {
     const map: Record<string, 'blue' | 'orange' | 'success' | 'danger' | 'gray'> = {
@@ -185,8 +168,7 @@ console.log(portfolio)
               <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                 {showAllTransactions ? `${transactions.length} transactions` : `${Math.min(5, transactions.length)} sur ${transactions.length} transactions`}
               </p>
-            </div>
-            <div className="flex items-center space-x-3">
+            </div>            <div className="flex items-center space-x-3">
               {transactions.length > 5 && (
                 <button 
                   onClick={() => setShowAllTransactions(!showAllTransactions)}
@@ -263,17 +245,17 @@ console.log(portfolio)
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSuccess={() => {
-          fetcTransactions();
+          fetchTransactions();
           setNotification({ type: 'success', message: 'Transaction ajoutée avec succès!' });
         }}
-        portfolios={portfolio}
+        portfolios={portfolios}
       />
       
       <CryptoPaymentModal
         isOpen={showCryptoModal}
         onClose={() => setShowCryptoModal(false)}
         onSuccess={() => {
-          fetcTransactions();
+          fetchTransactions();
           setNotification({ type: 'success', message: 'Dépôt USDT confirmé avec succès!' });
         }}
       />
@@ -282,7 +264,7 @@ console.log(portfolio)
         isOpen={showMomoModal}
         onClose={() => setShowMomoModal(false)}
         onSuccess={() => {
-          fetcTransactions();
+          fetchTransactions();
           setNotification({ type: 'success', message: 'Paiement Mobile Money confirmé avec succès!' });
         }}
       />

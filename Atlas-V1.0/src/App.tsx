@@ -27,11 +27,20 @@ import AdminUsersPro from './pages/AdminUsersPro';
 import { useClubData } from './hooks/useClubData';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { useAppStore } from './store/useAppStore';
 
 const AppContent: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const clubData = useClubData();
-  useAuth();
+  const { isAuthenticated } = useAuth();
+  const refreshAll = useAppStore((s) => s.refreshAll);
+
+  // Charge toutes les données dès que l'utilisateur est connecté
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      refreshAll();
+    }
+  }, [isAuthenticated, refreshAll]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
