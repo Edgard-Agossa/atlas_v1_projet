@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import API_BASE_URL from '../config/api';
 
 interface User {
   id: string;
@@ -30,10 +31,6 @@ interface RegisterData {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Configuration API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
-// const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
