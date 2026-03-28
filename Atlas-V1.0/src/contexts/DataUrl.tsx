@@ -225,7 +225,7 @@ export class AccountService {
      }
 
      //Log pour debug( en développement seulement)
-     if (process.env.NODE_ENV === 'developement') {
+     if (process.env.NODE_ENV === 'development') {
       console.error('Erreur getTotalBalancesOfAuth:', error);
      }
      //Re-lancer l'erreur pour que le compsant puisse la gérer

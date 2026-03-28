@@ -444,9 +444,15 @@ class CryptoTransactionStatusView(APIView):
             }, status=status.HTTP_404_NOT_FOUND)
 
 class AdminCryptoTransactionsView(APIView):
-    # permission_classes = [IsAdminUser]
+    permission_classes = [IsAuthenticated]
     
     def get(self, request):
+        # Vérification du rôle admin
+        if not request.user.role or request.user.role.name != 'admin':
+            return Response(
+                {'error': 'Accès non autorisé. Rôle admin requis.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
         try:
             # Filtres
             status_filter = request.query_params.get('status')
@@ -493,7 +499,7 @@ class AdminCryptoTransactionsView(APIView):
 from .mobile_money.fedapay_service import fedapay_service
 
 class MobileMoneyPaymentInitView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     
     def post(self, request):
         signature = request.headers.get('X-FedaPay-Signature')

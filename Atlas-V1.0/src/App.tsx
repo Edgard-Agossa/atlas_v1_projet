@@ -24,6 +24,7 @@ import Allocation from './pages/Allocation';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminUsersPro from './pages/AdminUsersPro';
+import PortfolioSnapshot from './pages/PortfolioSnapshot';
 import { useClubData } from './hooks/useClubData';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -75,6 +76,7 @@ const AppContent: React.FC = () => {
                       <Route path="/my-report" element={<MyReport />} />
                       <Route path="/reports" element={<Reports {...clubData} />} />
                       <Route path="/settings" element={<Settings />} />
+                      <Route path="/recapitulatif" element={<PortfolioSnapshot />} />
                       <Route path="/admin/users" element={
                         <ProtectedRoute adminOnly={true}>
                           <AdminUsersPro />

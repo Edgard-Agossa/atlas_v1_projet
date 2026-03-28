@@ -185,6 +185,40 @@ class USDTWalletConfig(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 # Modèle pour les paiements Mobile Money via Fedapay et leurs retours d'erreur 
+# ── Récapitulatif Portfolio (Snapshot CSV) ────────────────────────────────────
+
+class PortfolioSnapshot(models.Model):
+    portfolio_name = models.CharField(max_length=100, default='Phronesis')
+    semaine = models.CharField(max_length=50, blank=True)
+    vnl = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='snapshots')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.portfolio_name} — {self.semaine} ({self.created_at.strftime('%d/%m/%Y')})"
+
+
+class SnapshotRow(models.Model):
+    snapshot = models.ForeignKey(PortfolioSnapshot, on_delete=models.CASCADE, related_name='rows')
+    actif = models.CharField(max_length=200)
+    poids = models.DecimalField(max_digits=10, decimal_places=4, default=0)
+    quantite = models.DecimalField(max_digits=20, decimal_places=4, default=0)
+    cours_achat = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    cours_cloture = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    dividende = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    rendement_brut = models.DecimalField(max_digits=10, decimal_places=4, default=0)
+    investissement = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    valorisation = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    rendement_annuel = models.DecimalField(max_digits=10, decimal_places=4, default=0)
+    variation_semaine = models.DecimalField(max_digits=10, decimal_places=4, default=0)
+
+    def __str__(self):
+        return f"{self.actif} — {self.snapshot}"
+
+
 class MobileMoneyPayment(models.Model):
     PAYMENT_METHODS =[
         ('mtn', 'MTN Mobile Money'),
