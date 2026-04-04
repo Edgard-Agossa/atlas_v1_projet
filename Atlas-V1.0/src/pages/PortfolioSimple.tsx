@@ -136,31 +136,31 @@ const PortfolioSimple: React.FC = () => {
     <div className="space-y-8">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center space-x-3 mb-1">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg">
-              <Briefcase className="w-5 h-5 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Portefeuille</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+            <Briefcase className="w-5 h-5 text-white" />
           </div>
-          <p className="text-gray-500 dark:text-gray-400 ml-13 pl-13">
-            {user?.role === 'admin' ? 'Gestion globale des actifs · Phronesis Capital' : 'Mes investissements · Phronesis Capital'}
-          </p>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Portefeuille</h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {user?.role === 'admin' ? 'Gestion globale des actifs · Phronesis Capital' : 'Mes investissements · Phronesis Capital'}
+            </p>
+          </div>
         </div>
         {user?.role === 'admin' && (
-          <div className="flex flex-wrap items-center gap-2 mt-4 sm:mt-0">
-            <button className="btn-secondary flex items-center text-sm" onClick={() => setIsUploadModalOpen(true)}>
-              <Upload className="w-4 h-4 mr-1.5" /> Importer Excel
+          <div className="flex flex-wrap items-center gap-2">
+            <button className="btn-secondary flex items-center text-xs sm:text-sm py-1.5 px-3" onClick={() => setIsUploadModalOpen(true)}>
+              <Upload className="w-3.5 h-3.5 mr-1.5" /> Excel
             </button>
-            <button className="btn-secondary flex items-center text-sm" onClick={() => setShowFilters(!showFilters)}>
-              <Filter className="w-4 h-4 mr-1.5" /> Filtrer
+            <button className="btn-secondary flex items-center text-xs sm:text-sm py-1.5 px-3" onClick={() => setShowFilters(!showFilters)}>
+              <Filter className="w-3.5 h-3.5 mr-1.5" /> Filtrer
             </button>
-            <button className="btn-secondary flex items-center text-sm" onClick={exportData}>
-              <Download className="w-4 h-4 mr-1.5" /> Exporter
+            <button className="btn-secondary flex items-center text-xs sm:text-sm py-1.5 px-3" onClick={exportData}>
+              <Download className="w-3.5 h-3.5 mr-1.5" /> Export
             </button>
-            <button className="btn-primary flex items-center text-sm" onClick={() => setIsAddAssetModalOpen(true)}>
-              <Plus className="w-4 h-4 mr-1.5" /> Ajouter un actif
+            <button className="btn-primary flex items-center text-xs sm:text-sm py-1.5 px-3" onClick={() => setIsAddAssetModalOpen(true)}>
+              <Plus className="w-3.5 h-3.5 mr-1.5" /> Ajouter
             </button>
           </div>
         )}
@@ -168,28 +168,28 @@ const PortfolioSimple: React.FC = () => {
 
       {/* ── KPI Cards admin ────────────────────────────────────────────────── */}
       {user?.role === 'admin' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
           {[
             {
-              label: 'Valeur totale du portefeuille',
+              label: 'Valeur totale',
               value: fmt(totalValue),
               icon: DollarSign,
               color: 'blue',
               sub: `${filteredHoldings.length} position${filteredHoldings.length > 1 ? 's' : ''}`,
             },
             {
-              label: 'Gain / Perte non réalisé',
+              label: 'Gain / Perte',
               value: fmt(totalGain),
               icon: totalGain >= 0 ? TrendingUp : TrendingDown,
               color: totalGain >= 0 ? 'green' : 'red',
               sub: `${totalGain >= 0 ? '+' : ''}${totalGainPercent.toFixed(2)}% vs coût`,
             },
             {
-              label: 'Rendement global',
+              label: 'Rendement',
               value: `${totalGainPercent >= 0 ? '+' : ''}${totalGainPercent.toFixed(2)}%`,
               icon: BarChart3,
               color: totalGainPercent >= 0 ? 'green' : 'red',
-              sub: `Coût total : ${fmt(totalCost)}`,
+              sub: `Coût : ${fmt(totalCost)}`,
             },
           ].map((card, i) => (
             <motion.div
@@ -197,32 +197,31 @@ const PortfolioSimple: React.FC = () => {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07 }}
-              className="relative overflow-hidden bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow p-6"
+              className={`relative overflow-hidden bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 sm:p-6 ${i === 2 ? 'col-span-2 lg:col-span-1' : ''}`}
             >
               <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">{card.label}</p>
-                  <p className={`text-2xl font-bold ${
+                <div className="min-w-0 flex-1 mr-3">
+                  <p className="text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">{card.label}</p>
+                  <p className={`text-base sm:text-2xl font-bold truncate ${
                     card.color === 'blue'  ? 'text-blue-600 dark:text-blue-400' :
                     card.color === 'green' ? 'text-emerald-600 dark:text-emerald-400' :
                                              'text-red-500 dark:text-red-400'
                   }`}>{card.value}</p>
-                  <p className="text-xs text-gray-400 mt-1">{card.sub}</p>
+                  <p className="text-[10px] sm:text-xs text-gray-400 mt-1 truncate">{card.sub}</p>
                 </div>
-                <div className={`p-3 rounded-xl ${
+                <div className={`p-2 sm:p-3 rounded-xl flex-shrink-0 ${
                   card.color === 'blue'  ? 'bg-blue-50 dark:bg-blue-900/20' :
                   card.color === 'green' ? 'bg-emerald-50 dark:bg-emerald-900/20' :
                                            'bg-red-50 dark:bg-red-900/20'
                 }`}>
-                  <card.icon className={`w-6 h-6 ${
+                  <card.icon className={`w-4 h-4 sm:w-6 sm:h-6 ${
                     card.color === 'blue'  ? 'text-blue-600 dark:text-blue-400' :
                     card.color === 'green' ? 'text-emerald-600 dark:text-emerald-400' :
                                              'text-red-500 dark:text-red-400'
                   }`} />
                 </div>
               </div>
-              {/* Barre décorative */}
-              <div className={`absolute bottom-0 left-0 h-1 w-full ${
+              <div className={`absolute bottom-0 left-0 h-0.5 w-full ${
                 card.color === 'blue'  ? 'bg-gradient-to-r from-blue-500 to-blue-600' :
                 card.color === 'green' ? 'bg-gradient-to-r from-emerald-400 to-emerald-600' :
                                          'bg-gradient-to-r from-red-400 to-red-600'
@@ -372,9 +371,9 @@ const PortfolioSimple: React.FC = () => {
               <p className="text-xs text-gray-400 mt-0.5">Phronesis Capital · Gestion de portefeuille</p>
             </div>
             {/* Tabs portefeuille */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               {/* Sélecteur de devise */}
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1.5">
                 <span className="text-xs text-gray-400 whitespace-nowrap">Devise :</span>
                 <select
                   value={currency}
@@ -392,7 +391,7 @@ const PortfolioSimple: React.FC = () => {
                   <button
                     key={tab}
                     onClick={() => setActiveInvTab(tab)}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                    className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                       activeInvTab === tab
                         ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
                         : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
@@ -406,22 +405,22 @@ const PortfolioSimple: React.FC = () => {
           </div>
 
           {/* KPI résumé investissements */}
-          <div className="grid grid-cols-3 gap-4 mt-4">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-4">
             {[
               { label: 'Capital investi', value: fmt(invTotalBalance), color: 'text-blue-600 dark:text-blue-400' },
               { label: 'Valeur brute', value: fmt(invTotalGrossValue), color: 'text-emerald-600 dark:text-emerald-400' },
-              { label: 'Nombre de parts', value: invTotalShares.toFixed(2), color: 'text-purple-600 dark:text-purple-400' },
+              { label: 'Nbre de parts', value: invTotalShares.toFixed(2), color: 'text-purple-600 dark:text-purple-400' },
             ].map((kpi, i) => (
-              <div key={i} className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 text-center">
-                <p className="text-xs text-gray-400 mb-1">{kpi.label}</p>
-                <p className={`text-sm font-bold ${kpi.color}`}>{kpi.value}</p>
+              <div key={i} className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-2.5 sm:p-3 text-center">
+                <p className="text-[10px] sm:text-xs text-gray-400 mb-1 leading-tight">{kpi.label}</p>
+                <p className={`text-xs sm:text-sm font-bold ${kpi.color} break-all`}>{kpi.value}</p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Tableau investissements */}
-        <div className="overflow-x-auto">
+        {/* Tableau investissements — desktop / Cards — mobile */}
+        <div className="overflow-x-auto hidden sm:block">
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-gradient-to-r from-blue-700 to-blue-900 text-white">
@@ -442,19 +441,13 @@ const PortfolioSimple: React.FC = () => {
                   className={`border-b border-gray-100 dark:border-gray-800 hover:bg-blue-50/40 dark:hover:bg-blue-900/10 transition-colors ${idx % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-800/30'}`}
                 >
                   <td className="px-4 py-4 text-center">
-                    <span className="w-7 h-7 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center mx-auto">
-                      {idx + 1}
-                    </span>
+                    <span className="w-7 h-7 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center mx-auto">{idx + 1}</span>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
-                    <span className="text-xs font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-md">
-                      {inv.member_external_id || 'N/A'}
-                    </span>
+                    <span className="text-xs font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-md">{inv.member_external_id || 'N/A'}</span>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white uppercase">
-                      {user?.firstName} {user?.lastName}
-                    </p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white uppercase">{user?.firstName} {user?.lastName}</p>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{inv.email}</td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{inv.telephone || 'N/A'}</td>
@@ -469,29 +462,58 @@ const PortfolioSimple: React.FC = () => {
                     <span className="text-sm font-extrabold text-blue-700 dark:text-blue-300">{fmt(inv.gross_value)}</span>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
-                    <Badge
-                      label={inv.portfolio_name || inv.portfolio_type}
-                      variant={inv.portfolio_type === 'PHRONESIS' ? 'primary' : 'success'}
-                    />
+                    <Badge label={inv.portfolio_name || inv.portfolio_type} variant={inv.portfolio_type === 'PHRONESIS' ? 'primary' : 'success'} />
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
-                    <Badge
-                      label={inv.is_active ? 'Actif' : 'Inactif'}
-                      variant={inv.is_active ? 'success' : 'gray'}
-                    />
+                    <Badge label={inv.is_active ? 'Actif' : 'Inactif'} variant={inv.is_active ? 'success' : 'gray'} />
                   </td>
                 </motion.tr>
               ))}
             </tbody>
           </table>
+        </div>
 
-          {filteredInvestments.length === 0 && (
-            <div className="text-center py-16">
-              <DollarSign className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 dark:text-gray-400 font-medium">Aucun investissement trouvé</p>
-              <p className="text-gray-400 text-sm mt-1">Aucune donnée pour ce portefeuille</p>
-            </div>
-          )}
+        {/* Vue mobile — cards */}
+        <div className="sm:hidden divide-y divide-gray-100 dark:divide-gray-800">
+          {filteredInvestments.map((inv, idx) => (
+            <motion.div
+              key={inv.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.04 }}
+              className="p-4 space-y-3"
+            >
+              {/* Header card */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-7 h-7 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center flex-shrink-0">{idx + 1}</span>
+                  <span className="text-xs font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-md">{inv.member_external_id || 'N/A'}</span>
+                </div>
+                <div className="flex gap-1.5">
+                  <Badge label={inv.portfolio_name || inv.portfolio_type} variant={inv.portfolio_type === 'PHRONESIS' ? 'primary' : 'success'} />
+                  <Badge label={inv.is_active ? 'Actif' : 'Inactif'} variant={inv.is_active ? 'success' : 'gray'} />
+                </div>
+              </div>
+              {/* Nom */}
+              <p className="text-sm font-semibold text-gray-900 dark:text-white uppercase">{user?.firstName} {user?.lastName}</p>
+              <p className="text-xs text-gray-400">{inv.email} · {inv.date_entree}</p>
+              {/* Chiffres */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-2.5 text-center">
+                  <p className="text-[10px] text-gray-400 mb-0.5">Capital</p>
+                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{fmt(inv.balance)}</p>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-2.5 text-center">
+                  <p className="text-[10px] text-gray-400 mb-0.5">Parts</p>
+                  <p className="text-xs font-bold text-purple-600 dark:text-purple-400">{inv.shares_count.toFixed(2)}</p>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-2.5 text-center">
+                  <p className="text-[10px] text-gray-400 mb-0.5">Valeur brute</p>
+                  <p className="text-xs font-bold text-blue-600 dark:text-blue-400">{fmt(inv.gross_value)}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </motion.div>
 

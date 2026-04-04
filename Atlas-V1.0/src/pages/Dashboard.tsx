@@ -185,32 +185,30 @@ const Dashboard: React.FC = () => {
       ) : (
         <>
           {/* ── KPI Cards ──────────────────────────────────────────────────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-5">
             {kpis.map((kpi, i) => (
               <motion.div key={i} custom={i} variants={cardVariants} initial="hidden" animate="visible"
-                className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${kpi.gradient} p-6 text-white shadow-lg`}>
+                className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${kpi.gradient} p-4 sm:p-6 text-white shadow-lg`}>
                 {/* Cercle décoratif */}
                 <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-white/5" />
                 <div className="absolute -bottom-8 -right-2 w-20 h-20 rounded-full bg-white/5" />
                 <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`p-2.5 rounded-xl ${kpi.iconBg}`}>
-                      <kpi.icon className={`w-5 h-5 ${kpi.iconColor}`} />
+                  <div className="flex items-center justify-between mb-3">
+                    <div className={`p-2 rounded-xl ${kpi.iconBg}`}>
+                      <kpi.icon className={`w-4 h-4 ${kpi.iconColor}`} />
                     </div>
                     {'positive' in kpi && (
-                      <span className={`flex items-center text-xs font-semibold px-2 py-1 rounded-full ${
-                        kpi.positive ? 'bg-white/20 text-white' : 'bg-white/20 text-white'
-                      }`}>
+                      <span className="flex items-center text-xs font-semibold px-1.5 py-0.5 rounded-full bg-white/20 text-white">
                         {kpi.positive
-                          ? <ArrowUpRight className="w-3 h-3 mr-1" />
-                          : <ArrowDownRight className="w-3 h-3 mr-1" />}
+                          ? <ArrowUpRight className="w-3 h-3 mr-0.5" />
+                          : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
                         {currentGainPct >= 0 ? '+' : ''}{currentGainPct.toFixed(1)}%
                       </span>
                     )}
                   </div>
-                  <p className="text-white/70 text-xs font-medium uppercase tracking-wide mb-1">{kpi.label}</p>
-                  <p className="text-2xl font-bold text-white leading-tight">{kpi.value}</p>
-                  {kpi.sub && <p className="text-white/60 text-xs mt-1.5 truncate">{kpi.sub}</p>}
+                  <p className="text-white/70 text-[10px] sm:text-xs font-medium uppercase tracking-wide mb-1">{kpi.label}</p>
+                  <p className="text-base sm:text-2xl font-bold text-white leading-tight">{kpi.value}</p>
+                  {kpi.sub && <p className="text-white/60 text-[10px] sm:text-xs mt-1 truncate">{kpi.sub}</p>}
                 </div>
               </motion.div>
             ))}

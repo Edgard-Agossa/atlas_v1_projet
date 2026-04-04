@@ -592,24 +592,24 @@ const PortfolioSnapshot: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
+        className="flex items-center justify-between gap-3"
       >
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl shadow-lg">
-            <TableProperties className="w-7 h-7 text-white" />
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl shadow-lg flex-shrink-0">
+            <TableProperties className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Récapitulatif</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Récapitulatif</h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400 hidden sm:block mt-0.5">
               Historique des snapshots hebdomadaires du portfolio
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={fetchSnapshots}
-            className="p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             title="Actualiser"
           >
             <RefreshCw className="w-4 h-4 text-gray-500" />
@@ -617,10 +617,10 @@ const PortfolioSnapshot: React.FC = () => {
           {isAdmin && (
             <button
               onClick={() => setShowUpload(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+              className="flex items-center gap-1.5 px-3 sm:px-5 py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-xl transition-colors shadow-sm"
             >
-              <Upload className="w-4 h-4" />
-              Importer CSV
+              <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span>Importer CSV</span>
             </button>
           )}
         </div>
@@ -679,7 +679,7 @@ const PortfolioSnapshot: React.FC = () => {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
-        className="flex flex-col sm:flex-row gap-3"
+        className="flex gap-2"
       >
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -691,14 +691,14 @@ const PortfolioSnapshot: React.FC = () => {
             className="w-full pl-10 pr-4 py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-400"
           />
         </div>
-        <div className="relative">
+        <div className="relative flex-shrink-0">
           <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <select
             value={filterPortfolio}
             onChange={e => setFilterPortfolio(e.target.value)}
-            className="pl-10 pr-8 py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white appearance-none cursor-pointer"
+            className="pl-9 pr-7 py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white appearance-none cursor-pointer"
           >
-            <option value="all">Tous les portfolios</option>
+            <option value="all">Tous</option>
             <option value="Phronesis">Phronesis</option>
             <option value="FlagShip">FlagShip</option>
           </select>
@@ -717,15 +717,21 @@ const PortfolioSnapshot: React.FC = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex flex-col items-center justify-center h-48 bg-white dark:bg-gray-900 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700"
+          className="flex flex-col items-center justify-center py-16 bg-white dark:bg-gray-900 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700"
         >
-          <TableProperties className="w-12 h-12 text-gray-200 dark:text-gray-700 mb-3" />
-          <p className="text-gray-500 dark:text-gray-400 font-medium">Aucun récapitulatif disponible</p>
+          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl mb-4">
+            <TableProperties className="w-10 h-10 text-blue-400" />
+          </div>
+          <p className="text-gray-700 dark:text-gray-300 font-semibold text-base mb-1">Aucun récapitulatif disponible</p>
+          <p className="text-gray-400 text-sm mb-5 text-center px-6">
+            Importez votre premier fichier CSV pour visualiser les données du portfolio
+          </p>
           {isAdmin && (
             <button
               onClick={() => setShowUpload(true)}
-              className="mt-3 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
             >
+              <Upload className="w-4 h-4" />
               Importer le premier CSV
             </button>
           )}

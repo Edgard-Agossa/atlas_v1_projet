@@ -31,7 +31,20 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useAppStore } from './store/useAppStore';
 
 const AppContent: React.FC = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Fermée par défaut sur mobile, ouverte sur desktop
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+
+  // Ferme la sidebar quand on passe en mobile, ouvre quand on passe en desktop
+  React.useEffect(() => {
+    const handleResize = () => {
+      const desktop = window.innerWidth >= 1024;
+      setIsDesktop(desktop);
+      if (!desktop) setSidebarOpen(false);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const clubData = useClubData();
   const { isAuthenticated } = useAuth();
   const refreshAll = useAppStore((s) => s.refreshAll);
@@ -52,7 +65,10 @@ const AppContent: React.FC = () => {
           <ProtectedRoute>
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
               <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-              <div className={`transition-all duration-300 ${sidebarOpen ? 'ml-280' : 'ml-0'}`}>
+              <div
+                style={{ marginLeft: isDesktop && sidebarOpen ? 280 : 0 }}
+                className="transition-all duration-300"
+              >
                 <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} sidebarOpen={sidebarOpen} />
                 
                 <main className="bg-gray-50 dark:bg-gray-900 min-h-screen">

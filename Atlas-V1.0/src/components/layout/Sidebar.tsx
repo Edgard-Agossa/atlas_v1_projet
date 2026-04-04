@@ -131,7 +131,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       <motion.div
         initial={false}
         animate={{
-          width: isOpen ? 280 : 0
+          width: isOpen ? 280 : 0,
+          x: isOpen ? 0 : -10,
         }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className="bg-white dark:bg-gray-900 shadow-2xl border-r border-gray-200 dark:border-gray-700 overflow-hidden h-screen"

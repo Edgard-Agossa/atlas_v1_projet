@@ -7,6 +7,13 @@
   margin-left: 280px;
 }
 
+/* Sidebar desktop margin utility */
+@media (min-width: 1024px) {
+  .lg-ml-sidebar {
+    margin-left: 280px;
+  }
+}
+
 /* Modern hover-only scrollbar */
 .modern-scrollbar {
   scrollbar-width: none; /* Firefox */
