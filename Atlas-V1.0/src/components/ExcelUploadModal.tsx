@@ -1,127 +1,247 @@
 import React, { useState } from 'react';
-import { Upload, X, FileSpreadsheet } from 'lucide-react';
+import { Upload, X, FileSpreadsheet, RefreshCw, AlertCircle } from 'lucide-react';
 import NotificationModal from './NotificationModal';
+import API_BASE_URL from '../config/api';
 
 interface ExcelUploadModalProps {
   onClose: () => void;
   onSuccess: () => void;
 }
 
+const ALLOWED_SHEETS = ['Table_Membre', 'Portfolio', 'Transactions', 'Membres'];
+
 const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({ onClose, onSuccess }) => {
   const [file, setFile] = useState<File | null>(null);
+  const [sheets, setSheets] = useState<string[]>([]);
+  const [sheetsColumns, setSheetsColumns] = useState<Record<string, string[]>>({});
+  const [sheetName, setSheetName] = useState('');
+  const [loadingSheets, setLoadingSheets] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [sheetName, setSheetName] = useState('Table_Membre');
+  const [sheetWarning, setSheetWarning] = useState('');
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'warning'; message: string } | null>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0];
+    if (!selected) return;
+
+    setFile(selected);
+    setSheets([]);
+    setSheetName('');
+    setSheetWarning('');
+    setLoadingSheets(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('file', selected);
+
+      const res = await fetch(`${API_BASE_URL}/investment/upload-assets/sheets/`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.sheets?.length > 0) {
+        setSheets(data.sheets);
+        setSheetsColumns(data.sheets_columns || {});
+        const match = data.sheets.find((s: string) => ALLOWED_SHEETS.includes(s));
+        if (match) {
+          setSheetName(match);
+        } else {
+          setSheetWarning(
+            `Aucun onglet reconnu (${ALLOWED_SHEETS.join(', ')}) trouvé. ` +
+            `Onglets disponibles : ${data.sheets.join(', ')}`
+          );
+          setSheetName(data.sheets[0]);
+        }
+      } else {
+        setNotification({ type: 'error', message: data.error || 'Impossible de lire les onglets' });
+      }
+    } catch {
+      setNotification({ type: 'error', message: 'Erreur de connexion au serveur' });
+    } finally {
+      setLoadingSheets(false);
     }
   };
 
-const handleUpload = async () => {
-  if (!file) return;
+  const handleUpload = async () => {
+    if (!file || !sheetName) return;
+    setLoading(true);
 
-  setLoading(true);
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('sheet_name', sheetName);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('sheet_name', sheetName);
 
-  try {
-    const token = localStorage.getItem('token');
-    const response = await fetch('http://127.0.0.1:8080/api/investment/upload-assets/', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-      body: formData,
-    });
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE_URL}/investment/upload-assets/`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      });
 
-    const data = await response.json();
+      const data = await res.json();
 
-    if (response.ok) {
-      setNotification({ type: 'success', message: `${data.processed_count} lignes traitées avec succès` });
-      setTimeout(() => {
-        onSuccess();
-        onClose();
-      }, 1500);
-    } else {
-      setNotification({ type: 'error', message: data.error || 'Erreur lors de l\'importation' });
+      if (res.ok) {
+        setNotification({
+          type: 'success',
+          message: `${data.processed_count} ligne(s) traitée(s) depuis l'onglet "${data.sheet_used}"`,
+        });
+        setTimeout(() => { onSuccess(); onClose(); }, 1800);
+      } else {
+        // Le backend retourne les onglets disponibles si l'onglet n'existe pas
+        const msg = data.available_sheets
+          ? `${data.error}\n\nOnglets disponibles : ${data.available_sheets.join(', ')}`
+          : data.error || "Erreur lors de l'importation";
+        setNotification({ type: 'error', message: msg });
+      }
+    } catch {
+      setNotification({ type: 'error', message: 'Erreur de connexion au serveur' });
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    setNotification({ type: 'error', message: 'Erreur de connexion au serveur' });
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
+  const isSheetAllowed = ALLOWED_SHEETS.includes(sheetName);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-md">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Importer fichier Excel</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <X className="w-6 h-6" />
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-md shadow-2xl border border-gray-100 dark:border-gray-800">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-xl">
+              <FileSpreadsheet className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white">Importer fichier Excel</h2>
+              <p className="text-xs text-gray-400">Membres & investissements</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+            <X className="w-5 h-5 text-gray-400" />
           </button>
         </div>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Onglet à importer</label>
-            <select
-              value={sheetName}
-              onChange={(e) => setSheetName(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg"
-            >
-              <option value="Table_Membre">Table Membre</option>
-              <option value="Portfolio">Portfolio</option>
-              <option value="Transactions">Transactions</option>
-            </select>
-          </div>
+        <div className="px-6 py-5 space-y-4">
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Fichier Excel</label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <input
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={handleFileChange}
-                className="hidden"
-                id="file-upload"
-              />
-              <label htmlFor="file-upload" className="cursor-pointer">
-                <FileSpreadsheet className="w-12 h-12 mx-auto text-gray-400 mb-2" />
-                <p className="text-sm text-gray-600">
-                  {file ? file.name : 'Cliquez pour sélectionner un fichier'}
-                </p>
+          {/* Zone fichier */}
+          <label htmlFor="file-upload" className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 cursor-pointer transition-all ${
+            file
+              ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/10'
+              : 'border-gray-200 dark:border-gray-700 hover:border-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+          }`}>
+            <input type="file" accept=".xlsx,.xls" onChange={handleFileChange} className="hidden" id="file-upload" />
+            {loadingSheets ? (
+              <div className="flex flex-col items-center gap-2">
+                <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />
+                <p className="text-sm text-blue-600 font-medium">Lecture des onglets...</p>
+              </div>
+            ) : file ? (
+              <div className="flex flex-col items-center gap-1 text-center">
+                <FileSpreadsheet className="w-8 h-8 text-blue-500" />
+                <p className="text-sm font-semibold text-blue-700 dark:text-blue-400 truncate max-w-[280px]">{file.name}</p>
+                <p className="text-xs text-gray-400">{(file.size / 1024).toFixed(1)} KB · cliquez pour changer</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-2">
+                <FileSpreadsheet className="w-10 h-10 text-gray-300 dark:text-gray-600" />
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Cliquez pour sélectionner</p>
+                <p className="text-xs text-gray-400">.xlsx ou .xls</p>
+              </div>
+            )}
+          </label>
+
+          {/* Sélecteur d'onglet — affiché dès que le fichier est chargé */}
+          {sheets.length > 0 && (
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
+                Onglet à importer
+                <span className="ml-2 text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 px-1.5 py-0.5 rounded-full">
+                  {sheets.length} onglet{sheets.length > 1 ? 's' : ''} dans le fichier
+                </span>
               </label>
-            </div>
-          </div>
+              <select
+                value={sheetName}
+                onChange={e => setSheetName(e.target.value)}
+                className={`w-full px-3 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-colors ${
+                  isSheetAllowed
+                    ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                    : 'bg-amber-50 dark:bg-amber-900/10 border-amber-300 dark:border-amber-700'
+                }`}
+              >
+                {sheets.map(s => (
+                  <option key={s} value={s}>
+                    {s}{ALLOWED_SHEETS.includes(s) ? ' ✓' : ''}
+                  </option>
+                ))}
+              </select>
 
+              {/* Colonnes détectées — aide au diagnostic */}
+              {sheetsColumns[sheetName]?.length > 0 && (
+                <div className="mt-2 p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
+                    Colonnes détectées dans "{sheetName}"
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {sheetsColumns[sheetName].map((col, i) => {
+                      const isKnown = ['Email', 'ID membre', 'Nom & prénom', 'Montant versé', 'Nbre de part', 'Valeur Brute', 'Statut Portfolio', 'Password'].includes(col);
+                      return (
+                        <span key={i} className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                          isKnown
+                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                            : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                        }`}>
+                          {col}
+                        </span>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[10px] text-gray-400 mt-1.5">
+                    <span className="inline-block w-2 h-2 bg-emerald-400 rounded-full mr-1" />
+                    Vert = colonne reconnue par l'import
+                  </p>
+                </div>
+              )}
+              {/* Avertissement si onglet non reconnu */}
+              {!isSheetAllowed && sheetName && (
+                <div className="flex items-start gap-2 mt-2 p-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+                  <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-700 dark:text-amber-400">
+                    Cet onglet n'est pas dans la liste reconnue ({ALLOWED_SHEETS.join(', ')}). L'import peut échouer.
+                  </p>
+                </div>
+              )}
+
+              {/* Avertissement global si aucun onglet reconnu */}
+              {sheetWarning && (
+                <div className="flex items-start gap-2 mt-2 p-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+                  <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-700 dark:text-amber-400">{sheetWarning}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Bouton importer */}
           <button
             onClick={handleUpload}
-            disabled={!file || loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 flex items-center justify-center"
+            disabled={!file || !sheetName || loading || loadingSheets}
+            className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 text-white font-semibold rounded-xl transition-colors"
           >
-            {loading ? (
-              'Importation...'
-            ) : (
-              <>
-                <Upload className="w-4 h-4 mr-2" />
-                Importer
-              </>
-            )}
+            {loading
+              ? <><RefreshCw className="w-4 h-4 animate-spin" />Importation...</>
+              : <><Upload className="w-4 h-4" />Importer</>
+            }
           </button>
         </div>
       </div>
 
       {notification && (
-        <NotificationModal
-          type={notification.type}
-          message={notification.message}
-          onClose={() => setNotification(null)}
-        />
+        <NotificationModal type={notification.type} message={notification.message} onClose={() => setNotification(null)} />
       )}
     </div>
   );

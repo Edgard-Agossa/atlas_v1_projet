@@ -92,9 +92,17 @@ class Compte_member(models.Model):
     member_external_id = models.CharField(max_length=50, unique=True, null=True, blank=True)
     
     # Données financières issues de l'Excel
-    balance = models.DecimalField(max_digits=15, decimal_places=2, default=0) # Montant versé
-    shares_count = models.DecimalField(max_digits=15, decimal_places=6, default=0) # Nbre de part
-    gross_value = models.DecimalField(max_digits=15, decimal_places=2, default=0) # Valeur Brute
+    balance = models.DecimalField(max_digits=15, decimal_places=2, default=0)       # Montant versé
+    shares_count = models.DecimalField(max_digits=15, decimal_places=6, default=0)  # Nbre de part
+    gross_value = models.DecimalField(max_digits=15, decimal_places=2, default=0)   # Valeur nette
+
+    # Champs supplémentaires issus de l'Excel
+    date_entree = models.DateField(null=True, blank=True)                            # Date d'entrée
+    promesse_annuelle = models.DecimalField(max_digits=15, decimal_places=2, default=0, null=True, blank=True)  # Promesse Annuelle
+    frais_gestion = models.DecimalField(max_digits=15, decimal_places=2, default=0, null=True, blank=True)      # Frais de gestion
+    capital_net = models.DecimalField(max_digits=15, decimal_places=2, default=0, null=True, blank=True)        # Capital investi net (frais déduits)
+    parts_pct = models.DecimalField(max_digits=10, decimal_places=4, default=0, null=True, blank=True)          # Parts détenues (%)
+    profit_type = models.CharField(max_length=100, blank=True, null=True)            # Profit Type (PHR_Prudent, FLG_Dynamique...)
     
     # Métadonnées
     account_number = models.CharField(max_length=50, unique=True)

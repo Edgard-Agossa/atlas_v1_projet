@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
-import { AccountService } from '../../contexts/DataUrl';
+import { useAppStore } from '../../store/useAppStore';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -46,70 +46,15 @@ const navigation = [
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
+  const { memberInvestments, loadingMemberInvestments } = useAppStore();
 
-  const [balance, setBalance] = useState({
-    total: 0,
-    loading: true,
-    error: null as string | null
-  });
+  // Valeur totale = somme des gross_value des deux portfolios de l'utilisateur connecté
+  const totalGrossValue = useMemo(() =>
+    memberInvestments.reduce((sum, inv) => sum + inv.gross_value, 0),
+  [memberInvestments]);
 
-  //Récupérer les soldes au chargement
-  useEffect(() => {
-    const fetchBalance = async () => {
-      if (!user?.id) return;
-      try {
-        setBalance(prev => ({
-          ...prev,
-          loading: true,
-          error: null
-        }));
-
-        const response = await AccountService.getTotalBalancesOfAuth(parseInt(user.id));
-        console.log('Response des soldes :', response);
-        if (response.success && response.accounts) {
-            const totalBalance = response.accounts.reduce((sum, account) => sum + account.balance, 0);
-           setBalance({ total: totalBalance, loading: false, error: null });
-        } else {
-                // ✅ Si pas de comptes, essayer de les créer automatiquement
-        try {
-          console.log('Aucun compte trouvé, création automatique...');
-          await AccountService.createMemberAccounts(parseInt(user.id));
-          
-          // Réessayer de récupérer les soldes après création
-          const retryResponse = await AccountService.getTotalBalancesOfAuth(parseInt(user.id));
-          if (retryResponse.success && retryResponse.accounts) {
-            const totalBalance = retryResponse.accounts.reduce((sum, account) => sum + account.balance, 0);
-            setBalance({ total: totalBalance, loading: false, error: null });
-          } else {
-            setBalance({ total: 0, loading: false, error: null }); // Pas d'erreur, juste 0€
-          }
-        } catch (createError) {
-          console.error('Erreur création comptes:', createError);
-          setBalance({ total: 0, loading: false, error: null }); // Afficher 0€ au lieu d'une erreur
-        }
-      }
-    } catch (error) {
-      console.error('Erreur lors de la récupération des soldes :', error);
-      setBalance({ 
-        total: 0, 
-        loading: false, 
-        error: error instanceof Error ? error.message : 'Erreur de connexion'
-      });
-    }
-  };
-  fetchBalance();
-}, [user?.id]);
-
-
-  // Formater le montant
-  const formatAmount = (amount: number) => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
+  const formatAmount = (amount: number) =>
+    new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(amount) + ' CFA';
   // Filtrer la navigation selon le rôle de l'utilisateur
   const filteredNavigation = navigation.filter(item => {
     if (item.name === 'Admin Users' && user?.role !== 'admin') {
@@ -157,18 +102,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <Wallet className="w-5 h-5 text-green-600 dark:text-green-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                   Valeur totale
-           </p>
-      {balance.loading ? (
-        <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-6 w-20 rounded"></div>
-      ) : balance.error ? (
-        <p className="text-sm text-red-500">Erreur</p>
-      ) : (
-        <p className="text-xl font-bold text-green-600 dark:text-green-400">
-          {formatAmount(balance.total)}
-        </p>
-      )}
+                </p>
+                {loadingMemberInvestments ? (
+                  <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-6 w-20 rounded mt-1" />
+                ) : (
+                  <p className="text-base font-bold text-green-600 dark:text-green-400 truncate">
+                    {formatAmount(totalGrossValue)}
+                  </p>
+                )}
               </div>
             </div>
           </div>

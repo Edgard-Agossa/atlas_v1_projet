@@ -100,32 +100,30 @@ class PortfolioListView(APIView):
 class PortfolioView(APIView):
     permission_classes = [IsAuthenticated]
 
-    #Recupération des portfolio
     def get(self, request):
-        portfolios = Portfolio.objects.all()
+        portfolios = Portfolio.objects.all().select_related('created_by')
         data = []
         for portfolio in portfolios:
             data.append({
                 'id': portfolio.id,
                 'name': portfolio.name,
                 'type': portfolio.type,
-                'cash': portfolio.cash,
-                # 'created_by': portfolio.created_by,
-                # 'created_at': portfolio.created_at.strftime('%Y-%m-%d %H:%M:%S') if portfolio.created_at else '',
-                'is_active': portfolio.is_active
-                })
+                'cash': float(portfolio.cash),
+                'is_active': portfolio.is_active,
+                'last_updated': portfolio.last_updated,
+                'created_by': {
+                    'id': portfolio.created_by.id,
+                    'name': portfolio.created_by.full_name,
+                } if portfolio.created_by else None,
+            })
         return Response(data)
-    
-    
-    
+
     def post(self, request):
-        # if request.user.role.name if request.user.role else None != 'admin':
-        #     return Response({'error': 'Accès non autorisé'}, status=status.HTTP_403_FORBIDDEN)
-        
+        if not request.user.role or request.user.role.name != 'admin':
+            return Response({'error': 'Accès réservé aux administrateurs.'}, status=status.HTTP_403_FORBIDDEN)
         data = request.data
         if 'name' not in data or 'type' not in data:
             return Response({'error': 'Les champs name et type sont requis'}, status=status.HTTP_400_BAD_REQUEST)
-        
         try:
             portfolio = Portfolio.objects.create(
                 name=data['name'],
@@ -135,15 +133,53 @@ class PortfolioView(APIView):
             )
             return Response({
                 'message': 'Portefeuille créé avec succès',
-                'portfolio': {
-                    'id': portfolio.id,
-                    'name': portfolio.name,
-                    'type': portfolio.type,
-                    'cash': portfolio.cash
-                }
+                'portfolio': {'id': portfolio.id, 'name': portfolio.name, 'type': portfolio.type, 'cash': portfolio.cash}
             }, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PortfolioDetailView(APIView):
+    """PATCH / DELETE sur un portfolio — admin only."""
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, portfolio_id):
+        if not request.user.role or request.user.role.name != 'admin':
+            return Response({'error': 'Accès réservé aux administrateurs.'}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            portfolio = Portfolio.objects.get(id=portfolio_id)
+            if 'name' in request.data:
+                portfolio.name = request.data['name']
+            if 'cash' in request.data:
+                from decimal import Decimal
+                portfolio.cash = Decimal(str(request.data['cash']))
+            if 'is_active' in request.data:
+                portfolio.is_active = bool(request.data['is_active'])
+            portfolio.save()
+            return Response({
+                'success': True,
+                'portfolio': {'id': portfolio.id, 'name': portfolio.name, 'type': portfolio.type, 'cash': float(portfolio.cash), 'is_active': portfolio.is_active}
+            })
+        except Portfolio.DoesNotExist:
+            return Response({'error': 'Portfolio introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def delete(self, request, portfolio_id):
+        if not request.user.role or request.user.role.name != 'admin':
+            return Response({'error': 'Accès réservé aux administrateurs.'}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            portfolio = Portfolio.objects.get(id=portfolio_id)
+            # Vérifier qu'aucun compte membre n'est lié
+            if portfolio.member_accounts.exists():
+                return Response(
+                    {'error': f'{portfolio.member_accounts.count()} compte(s) membre lié(s). Désactivez-les avant de supprimer.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            portfolio.delete()
+            return Response({'success': True, 'message': 'Portfolio supprimé.'})
+        except Portfolio.DoesNotExist:
+            return Response({'error': 'Portfolio introuvable.'}, status=status.HTTP_404_NOT_FOUND)
 
 class MemberListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -224,7 +260,9 @@ class MemberAccountsView(APIView):
     def get(self, request, member_id):
         try:
             print(f"DEBUG: Recherche comptes pour member_id={member_id}")
-            accounts = AccountManager.get_member_accounts(member_id)
+            # Admin voit tous les comptes (actifs + inactifs), membre voit seulement les actifs
+            is_admin = request.user.role and request.user.role.name == 'admin'
+            accounts = AccountManager.get_member_accounts(member_id, include_inactive=is_admin)
             print(f"DEBUG: Nombre de comptes trouvés: {len(accounts)}")
             return Response({
                 'success': True,
@@ -233,6 +271,8 @@ class MemberAccountsView(APIView):
                         'id': acc.id,
                         'account_number': acc.account_number,
                         'balance':  float(acc.balance),
+                        'shares_count': float(acc.shares_count),
+                        'gross_value': float(acc.gross_value),
                         'portfolio': acc.portfolio.name,
                         'portfolio_type': acc.portfolio.type,
                         'is_active': acc.is_active
@@ -623,6 +663,86 @@ class MobileMoneyStatusView(APIView):
             }, status=status.HTTP_404_NOT_FOUND)
 #récupération des inverst
 
+class ToggleAccountActiveView(APIView):
+    """Admin — active ou désactive un compte membre (is_active)."""
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, compte_id):
+        if not request.user.role or request.user.role.name != 'admin':
+            return Response({'error': 'Accès réservé aux administrateurs.'},
+                            status=status.HTTP_403_FORBIDDEN)
+        try:
+            from .models import Compte_member
+            compte = Compte_member.objects.get(id=compte_id)
+            compte.is_active = not compte.is_active
+            compte.save()
+            return Response({
+                'success': True,
+                'compte_id': compte.id,
+                'is_active': compte.is_active,
+                'message': f"Compte {'activé' if compte.is_active else 'désactivé'} avec succès."
+            })
+        except Compte_member.DoesNotExist:
+            return Response({'error': 'Compte introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class UpdateMemberAccountView(APIView):
+    """Admin — met à jour les données financières d'un compte membre."""
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, compte_id):
+        if not request.user.role or request.user.role.name != 'admin':
+            return Response({'error': 'Accès réservé aux administrateurs.'},
+                            status=status.HTTP_403_FORBIDDEN)
+        try:
+            from .models import Compte_member
+            from decimal import Decimal, InvalidOperation
+            compte = Compte_member.objects.get(id=compte_id)
+
+            def to_dec(val):
+                try:
+                    return Decimal(str(val))
+                except (InvalidOperation, TypeError):
+                    return None
+
+            if 'balance' in request.data:
+                v = to_dec(request.data['balance'])
+                if v is not None:
+                    compte.balance = v
+            if 'shares_count' in request.data:
+                v = to_dec(request.data['shares_count'])
+                if v is not None:
+                    compte.shares_count = v
+            if 'gross_value' in request.data:
+                v = to_dec(request.data['gross_value'])
+                if v is not None:
+                    compte.gross_value = v
+            if 'member_external_id' in request.data:
+                compte.member_external_id = request.data['member_external_id']
+            if 'is_active' in request.data:
+                compte.is_active = bool(request.data['is_active'])
+
+            compte.save()
+            return Response({
+                'success': True,
+                'compte': {
+                    'id': compte.id,
+                    'account_number': compte.account_number,
+                    'balance': float(compte.balance),
+                    'shares_count': float(compte.shares_count),
+                    'gross_value': float(compte.gross_value),
+                    'member_external_id': compte.member_external_id,
+                    'is_active': compte.is_active,
+                    'portfolio': compte.portfolio.name,
+                    'portfolio_type': compte.portfolio.type,
+                }
+            })
+        except Compte_member.DoesNotExist:
+            return Response({'error': 'Compte introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class MemberInvestmentsView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -644,10 +764,15 @@ class MemberInvestmentsView(APIView):
                     'member_external_id': compte.member_external_id or 'N/A',
                     'email': compte.member.email,
                     'telephone': compte.member.phone or 'N/A',
-                    'date_entree': compte.created_at.strftime('%d/%m/%Y'),
+                    'date_entree': compte.date_entree.strftime('%d/%m/%Y') if compte.date_entree else compte.created_at.strftime('%d/%m/%Y'),
                     'balance': float(compte.balance),
                     'shares_count': float(compte.shares_count),
                     'gross_value': float(compte.gross_value),
+                    'promesse_annuelle': float(compte.promesse_annuelle) if compte.promesse_annuelle else 0,
+                    'frais_gestion': float(compte.frais_gestion) if compte.frais_gestion else 0,
+                    'capital_net': float(compte.capital_net) if compte.capital_net else 0,
+                    'parts_pct': float(compte.parts_pct) if compte.parts_pct else 0,
+                    'profit_type': compte.profit_type or '',
                     'portfolio_type': compte.portfolio.type,
                     'portfolio_name': compte.portfolio.name,
                     'is_active': compte.is_active

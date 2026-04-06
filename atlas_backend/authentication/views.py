@@ -232,25 +232,28 @@ class UserDetailView(APIView):
         })
 
     def put(self, request, user_id):
-        # Vérifier si l'utilisateur est admin
-        if request.user.role.name != 'admin':
-            return Response({
-                'error': 'Accès non autorisé. Rôle admin requis.'
-            }, status=status.HTTP_403_FORBIDDEN)
+        if not request.user.role or request.user.role.name != 'admin':
+            return Response({'error': 'Accès non autorisé. Rôle admin requis.'}, status=status.HTTP_403_FORBIDDEN)
 
         user = get_object_or_404(User, id=user_id)
         data = request.data
 
-        # Champs modifiables par admin
-        admin_updatable_fields = ['first_name', 'last_name', 'email', 'phone', 'avatar', 'role', 'is_active']
-
-        for field in admin_updatable_fields:
+        # Champs simples
+        for field in ['first_name', 'last_name', 'email', 'phone', 'avatar', 'is_active']:
             if field in data:
-                if field == 'role' and data[field] not in ['admin', 'member']:
-                    return Response({
-                        'error': 'Rôle invalide. Valeurs possibles: admin, member'
-                    }, status=status.HTTP_400_BAD_REQUEST)
                 setattr(user, field, data[field])
+
+        # Rôle — ForeignKey : on résout le nom en objet Role
+        if 'role' in data:
+            role_name = data['role']
+            try:
+                role_obj = Role.objects.get(name=role_name)
+                user.role = role_obj
+            except Role.DoesNotExist:
+                return Response(
+                    {'error': f"Rôle '{role_name}' introuvable."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
         try:
             user.save()
@@ -264,13 +267,11 @@ class UserDetailView(APIView):
                     'phone': user.phone,
                     'avatar': user.avatar,
                     'role': user.role.name if user.role else None,
-                    'is_active': user.is_active
+                    'is_active': user.is_active,
                 }
             })
         except Exception as e:
-            return Response({
-                'error': f'Erreur lors de la mise à jour: {str(e)}'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'error': f'Erreur lors de la mise à jour: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def delete(self, request, user_id):
         # Vérifier si l'utilisateur est admin

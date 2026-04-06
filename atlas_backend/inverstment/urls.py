@@ -1,6 +1,6 @@
 from django.urls import path, include
 from . import views
-from .views import AssetUploadView
+from .uploadFileViews import AssetUploadView, ExcelSheetsView
 from .snapshot_views import (
     PortfolioSnapshotUploadView,
     PortfolioSnapshotListView,
@@ -11,6 +11,7 @@ urlpatterns = [
     path('transactions/', views.TransactionListCreateView.as_view(), name='transaction-list'),
     path('portfolios/', views.PortfolioListView.as_view(), name='portfolio-list'),
     path('portfolio/', views.PortfolioView.as_view(), name='portfolio-list'),
+    path('portfolio/<int:portfolio_id>/', views.PortfolioDetailView.as_view(), name='portfolio-detail'),
     path('members/', views.MemberListView.as_view(), name='member-list'),
     path('', include('inverstment.urls_simple')),
 
@@ -21,6 +22,8 @@ urlpatterns = [
     path('accounts/create/<int:member_id>/', views.CreateMemberAccountsView.as_view(), name='create-member-accounts'),
     path('accounts/transactions/all/', views.AllTransactionsView.as_view(), name='all-transactions'),
     path('accounts/<int:compte_id>/transactions/', views.AccountTransactionsView.as_view(), name='account-transactions'),
+    path('accounts/<int:compte_id>/toggle-active/', views.ToggleAccountActiveView.as_view(), name='account-toggle-active'),
+    path('accounts/<int:compte_id>/update/', views.UpdateMemberAccountView.as_view(), name='account-update'),
 
     # Crypto USDT
     path('crypto/payment/init/', views.CryptoPaymentInitView.as_view(), name='crypto-payment-init'),
@@ -38,6 +41,7 @@ urlpatterns = [
 
     # Upload Excel membres
     path('upload-assets/', AssetUploadView.as_view(), name='upload-assets'),
+    path('upload-assets/sheets/', ExcelSheetsView.as_view(), name='upload-sheets'),
 
     # Récapitulatif Portfolio (Snapshots CSV)
     path('snapshots/', PortfolioSnapshotListView.as_view(), name='snapshot-list'),

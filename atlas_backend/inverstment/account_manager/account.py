@@ -167,16 +167,19 @@ class AccountManager:
             
         
     @staticmethod
-    def get_member_accounts(member_id):
-        
+    def get_member_accounts(member_id, include_inactive=False):
         """Récupérer tous les comptes d'un membre donné."""
         if member_id is None:
             raise ValueError("L'identifiant du membre ne peut pas être nul.")
-        
-        return Compte_member.objects.filter(
-            member__id=member_id,
-            is_active=True
+
+        qs = Compte_member.objects.filter(
+            member__id=member_id
         ).select_related('portfolio', 'member')
+
+        if not include_inactive:
+            qs = qs.filter(is_active=True)
+
+        return qs
         
     @staticmethod
     def creat_member_account(member_id):

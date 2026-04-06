@@ -94,7 +94,7 @@ const Dashboard: React.FC = () => {
 
   const kpis = [
     {
-      label: 'Valeur totale (NAV)',
+      label: 'Valeur totale',
       value: fmt(currentNav),
       sub: `${filteredInvestments.length} compte${filteredInvestments.length > 1 ? 's' : ''}`,
       icon: Wallet,
