@@ -8,12 +8,13 @@ interface ExcelUploadModalProps {
   onSuccess: () => void;
 }
 
-const ALLOWED_SHEETS = ['Table_Membre', 'Portfolio', 'Transactions', 'Membres'];
+const ALLOWED_SHEETS = ['Table_Membre', 'Membres', 'Journal_Transactions', 'Flux_Capitaux'];
 
 const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({ onClose, onSuccess }) => {
   const [file, setFile] = useState<File | null>(null);
   const [sheets, setSheets] = useState<string[]>([]);
   const [sheetsColumns, setSheetsColumns] = useState<Record<string, string[]>>({});
+  const [sheetHandlers, setSheetHandlers] = useState<Record<string, string | null>>({});
   const [sheetName, setSheetName] = useState('');
   const [loadingSheets, setLoadingSheets] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -46,14 +47,14 @@ const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({ onClose, onSuccess 
       if (res.ok && data.sheets?.length > 0) {
         setSheets(data.sheets);
         setSheetsColumns(data.sheets_columns || {});
-        const match = data.sheets.find((s: string) => ALLOWED_SHEETS.includes(s));
+        setSheetHandlers(data.sheet_handlers || {});
+        const match = data.sheets.find((s: string) =>
+          ALLOWED_SHEETS.includes(s) || data.sheet_handlers?.[s]
+        );
         if (match) {
           setSheetName(match);
         } else {
-          setSheetWarning(
-            `Aucun onglet reconnu (${ALLOWED_SHEETS.join(', ')}) trouvé. ` +
-            `Onglets disponibles : ${data.sheets.join(', ')}`
-          );
+          setSheetWarning(`Aucun onglet reconnu. Onglets disponibles : ${data.sheets.join(', ')}`);
           setSheetName(data.sheets[0]);
         }
       } else {
@@ -180,7 +181,30 @@ const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({ onClose, onSuccess 
                 ))}
               </select>
 
-              {/* Colonnes détectées — aide au diagnostic */}
+              {/* Handler détecté */}
+              {sheetHandlers[sheetName] && (
+                <div className="mt-2 flex items-center gap-2 p-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
+                  <p className="text-xs text-blue-700 dark:text-blue-400">
+                    Migration : <span className="font-semibold">{
+                      sheetHandlers[sheetName] === 'handle_membres' ? 'Membres → Comptes membres' :
+                      sheetHandlers[sheetName] === 'handle_portfolio_snapshot' ? 'Portfolio → Récapitulatif (SnapshotRow)' :
+                      sheetHandlers[sheetName] === 'handle_transactions' ? 'Transactions → Journal' :
+                      sheetHandlers[sheetName] === 'handle_flux_capitaux' ? 'Flux → Transactions dépôts/retraits' :
+                      sheetHandlers[sheetName]
+                    }</span>
+                  </p>
+                </div>
+              )}
+              {/* Avertissement si onglet non reconnu */}
+              {!sheetHandlers[sheetName] && sheetName && (
+                <div className="flex items-start gap-2 mt-2 p-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+                  <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-700 dark:text-amber-400">
+                    Aucun handler pour cet onglet. L'import peut échouer.
+                  </p>
+                </div>
+              )}
               {sheetsColumns[sheetName]?.length > 0 && (
                 <div className="mt-2 p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
                   <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
