@@ -25,6 +25,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminUsersPro from './pages/AdminUsersPro';
 import PortfolioSnapshot from './pages/PortfolioSnapshot';
+import MarketTicker from './components/MarketTicker';
 import { useClubData } from './hooks/useClubData';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -70,6 +71,7 @@ const AppContent: React.FC = () => {
                 className="transition-all duration-300"
               >
                 <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} sidebarOpen={sidebarOpen} />
+                <MarketTicker />
                 
                 <main className="bg-gray-50 dark:bg-gray-900 min-h-screen">
                   <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">

@@ -227,6 +227,26 @@ class SnapshotRow(models.Model):
         return f"{self.actif} — {self.snapshot}"
 
 
+# ── Ticker d'actifs ───────────────────────────────────────────────────────────
+
+class TickerAsset(models.Model):
+    symbol = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=200)
+    current_price = models.DecimalField(max_digits=20, decimal_places=4, default=0)
+    variation_pct = models.DecimalField(max_digits=10, decimal_places=4, default=0)
+    currency = models.CharField(max_length=20, default='USD')  # USD, EUR, XOF, EUR/XOF...
+    is_active = models.BooleanField(default=True)
+    order = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order', 'symbol']
+
+    def __str__(self):
+        return f"{self.symbol} — {self.current_price}"
+
+
 class MobileMoneyPayment(models.Model):
     PAYMENT_METHODS =[
         ('mtn', 'MTN Mobile Money'),

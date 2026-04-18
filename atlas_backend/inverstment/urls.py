@@ -1,6 +1,7 @@
 from django.urls import path, include
 from . import views
 from .uploadFileViews import AssetUploadView, ExcelSheetsView
+from .ticker_views import TickerListView, TickerDetailView, TickerSyncView
 from .snapshot_views import (
     PortfolioSnapshotUploadView,
     PortfolioSnapshotListView,
@@ -42,6 +43,11 @@ urlpatterns = [
     # Upload Excel membres
     path('upload-assets/', AssetUploadView.as_view(), name='upload-assets'),
     path('upload-assets/sheets/', ExcelSheetsView.as_view(), name='upload-sheets'),
+
+    # Ticker d'actifs
+    path('ticker/', TickerListView.as_view(), name='ticker-list'),
+    path('ticker/<int:asset_id>/', TickerDetailView.as_view(), name='ticker-detail'),
+    path('ticker/sync/', TickerSyncView.as_view(), name='ticker-sync'),
 
     # Récapitulatif Portfolio (Snapshots CSV)
     path('snapshots/', PortfolioSnapshotListView.as_view(), name='snapshot-list'),
