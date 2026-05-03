@@ -160,21 +160,49 @@ def handle_membres(df, uploaded_by):
     return results
 
 
-def handle_portfolio_snapshot(df, sheet_name, uploaded_by):
+def handle_portfolio_snapshot(df, sheet_name, uploaded_by, file=None):
     """Onglets Portfolio Phronesis / FlagShip → PortfolioSnapshot + SnapshotRow."""
     portfolio_type, portfolio_name = _detect_portfolio_sheet(sheet_name)
 
-    # Extraire VNL depuis les premières lignes si présent
+    # ── Trouver la vraie ligne d'en-tête ─────────────────────────────────────
+    # Le fichier Excel a des métadonnées en haut (VNL, date...) avant le tableau.
+    # On cherche la ligne qui contient "Actifs" pour l'utiliser comme en-tête.
+    real_df = df  # fallback
     vnl = None
-    try:
-        for i in range(min(5, len(df))):
-            row0 = df.iloc[i]
-            for col in df.columns:
-                val = str(row0.get(col, '')).strip()
-                if 'vnl' in str(col).lower() or 'vnl' in val.lower():
-                    vnl = _dec(val) if _dec(val) > 0 else None
-    except Exception:
-        pass
+
+    if file is not None:
+        try:
+            file.seek(0)
+            df_raw = pd.read_excel(file, sheet_name=sheet_name, header=None)
+            file.seek(0)
+
+            header_row_idx = None
+            for i, row in df_raw.iterrows():
+                row_vals = [str(v).strip().lower() for v in row.values if pd.notna(v) and str(v).strip()]
+                # Chercher la ligne d'en-tête (contient "actifs" ou "actif")
+                if any(v in ('actifs', 'actif', 'asset', 'titre') for v in row_vals):
+                    header_row_idx = i
+                    break
+                # Chercher la VNL dans les premières lignes
+                for j, v in enumerate(row.values):
+                    if pd.notna(v) and str(v).strip().upper() == 'VNL':
+                        # La valeur VNL est dans la cellule suivante
+                        if j + 1 < len(row.values) and pd.notna(row.values[j + 1]):
+                            vnl = _dec(row.values[j + 1]) or None
+
+            if header_row_idx is not None:
+                file.seek(0)
+                real_df = pd.read_excel(file, sheet_name=sheet_name, header=header_row_idx)
+                real_df = real_df.dropna(how='all')
+                # Normaliser les noms de colonnes (supprimer \n)
+                real_df.columns = [str(c).replace('\n', ' ').strip() for c in real_df.columns]
+                file.seek(0)
+        except Exception as e:
+            print(f"Erreur détection en-tête: {e}")
+            real_df = df
+
+    # Normaliser les colonnes du df de base aussi
+    real_df.columns = [str(c).replace('\n', ' ').strip() for c in real_df.columns]
 
     snapshot = PortfolioSnapshot.objects.create(
         portfolio_name=portfolio_name,
@@ -186,28 +214,56 @@ def handle_portfolio_snapshot(df, sheet_name, uploaded_by):
     SKIP_ROWS = {
         'total', 'total général', 'total ci', 'liquidité réservée',
         'total liquidité', 'valorisation du portefeuille', 'total general',
-        'liquidity', 'note', ''
+        'liquidity', 'note', '', 'actifs', 'actif', 'asset',
+        'total liquidite', 'liquidite reservee',
     }
 
+    def gc(row, *keys):
+        """Cherche une valeur numérique dans plusieurs colonnes possibles."""
+        for k in keys:
+            # Recherche exacte
+            v = row.get(k)
+            if v is not None and str(v).strip() not in ('', 'nan', 'NaN', 'None', '-', '#N/A'):
+                result = _dec(v)
+                if result != 0:
+                    return result
+            # Recherche partielle dans les colonnes
+            for col in row.index:
+                col_clean = str(col).lower().replace('\n', ' ').strip()
+                if k.lower() in col_clean:
+                    v2 = row[col]
+                    if v2 is not None and str(v2).strip() not in ('', 'nan', 'NaN', 'None', '-', '#N/A'):
+                        result = _dec(v2)
+                        if result != 0:
+                            return result
+        return _dec(0)
+
     rows_created = []
-    for _, row in df.iterrows():
-        actif = _str(row, 'Actifs', 'actifs', 'Actif', 'Asset', 'Titre')
+    for _, row in real_df.iterrows():
+        # Chercher le nom de l'actif
+        actif = None
+        for col_candidate in ['Actifs', 'actifs', 'Actif', 'Asset', 'Titre', 'ACTIFS']:
+            v = row.get(col_candidate)
+            if v and str(v).strip() not in ('', 'nan', 'NaN', 'None'):
+                actif = str(v).strip()
+                break
+
         if not actif or actif.lower() in SKIP_ROWS:
             continue
 
         SnapshotRow.objects.create(
             snapshot=snapshot,
             actif=actif,
-            poids=_dec(row.get("Poids de l'actif dans le Portfolio") or row.get('Poids') or row.get('Poids de l\'actif dans le\nPortfolio')),
-            quantite=_dec(row.get('Quantité') or row.get('Quantite') or row.get('Qté')),
-            cours_achat=_dec(row.get("cours d'achat") or row.get('Cours achat') or row.get("cours\nd'achat")),
-            cours_cloture=_dec(row.get('cours de clôture') or row.get('Cours cloture') or row.get('cours de\nclôture') or row.get('Capital Clôture')),
-            dividende=_dec(row.get('Dividende s/intérêts') or row.get('Dividende') or row.get('Dividende\ns/intérêts')),
-            rendement_brut=_dec(row.get('Rendement brut') or row.get('Rendement\nbrut') or row.get('Gain/Perte\nRéalisé\n(Positions\nfermées)')),
-            investissement=_dec(row.get('Investissement') or row.get('Capital de\ndépart')),
-            valorisation=_dec(row.get("Valorisation de l'actif") or row.get('Valorisation') or row.get("Valorisation de\nl'actif")),
-            rendement_annuel=_dec(row.get('Rendement annuel') or row.get('Rendement\nannuel')),
-            variation_semaine=_dec(row.get('Variation par rapport à la semaine précédente') or row.get('Variation semaine') or row.get('Variation par\nrapport à la\nsemaine\nprécédente')),
+            poids=gc(row, "Poids de l'actifs dans le Portfolio", "Poids de l'actif dans le Portfolio", "Poids"),
+            quantite=gc(row, 'Quantité', 'Quantite', 'Qté', 'Qty'),
+            cours_achat=gc(row, "cours d'achat", "Cours d'achat", "Cours achat"),
+            cours_cloture=gc(row, 'cours de clôture', 'cours de cloture', 'Cours clôture', 'Capital Clôture', 'Clôture'),
+            dividende=gc(row, 'Dividende s/intérêts', 'Dividende s/interets', 'Dividende'),
+            rendement_brut=gc(row, 'Rendement brut', 'Rendement Brut'),
+            investissement=gc(row, 'Investissement', 'Capital de départ'),
+            valorisation=gc(row, "Valorisation de l'actif", "Valorisation de l actif", 'Valorisation'),
+            rendement_annuel=gc(row, 'Rendement annuel', 'Rendement Annuel'),
+            variation_semaine=gc(row, 'Variation par rapport à la semaine précédente', 'Variation semaine', 'Variation'),
         )
         rows_created.append(actif)
 
@@ -217,6 +273,7 @@ def handle_portfolio_snapshot(df, sheet_name, uploaded_by):
         'rows_imported': len(rows_created),
         'actifs': rows_created,
     }
+
 
 
 def handle_transactions(df, uploaded_by):
@@ -388,7 +445,7 @@ class AssetUploadView(APIView):
             # Onglets portfolio (Phronesis / FlagShip)
             pt, _ = _detect_portfolio_sheet(target_sheet)
             if pt:
-                result = handle_portfolio_snapshot(df, target_sheet, request.user)
+                result = handle_portfolio_snapshot(df, target_sheet, request.user, file)
                 return Response({
                     'status': 'success',
                     'sheet_used': target_sheet,
