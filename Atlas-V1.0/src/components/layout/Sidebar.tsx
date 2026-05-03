@@ -24,7 +24,7 @@ interface SidebarProps {
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Récapitulatif', href: '/recapitulatif', icon: TableProperties },
+  { name: 'Portfolio Global', href: '/recapitulatif', icon: TableProperties },
   { name: 'Portfolio', href: '/portfolio', icon: Briefcase },
   { name: 'Transactions', href: '/transactions', icon: ArrowUpDown },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },

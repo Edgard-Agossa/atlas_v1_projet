@@ -599,7 +599,7 @@ const PortfolioSnapshot: React.FC = () => {
             <TableProperties className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Récapitulatif</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Portfolio Global</h1>
             <p className="text-xs text-gray-500 dark:text-gray-400 hidden sm:block mt-0.5">
               Historique des snapshots hebdomadaires du portfolio
             </p>

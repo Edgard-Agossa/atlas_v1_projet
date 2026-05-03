@@ -11,7 +11,7 @@ interface HeaderProps {
 // Map path → label pour le breadcrumb
 const PAGE_LABELS: Record<string, string> = {
   '/dashboard':    'Dashboard',
-  '/recapitulatif':'Récapitulatif',
+  '/recapitulatif':'Portfolio Global',
   '/portfolio':    'Portfolio',
   '/transactions': 'Transactions',
   '/analytics':    'Analytics',
