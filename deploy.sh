@@ -21,7 +21,7 @@ git pull origin winner_kiro
 echo "🐍 Mise à jour du backend..."
 cd $BACKEND_DIR
 source $VENV_DIR/bin/activate
-pip install -r requirements.txt --quiet
+pip install -r requirements.txt --quiet --upgrade
 python3 manage.py migrate --noinput
 python3 manage.py collectstatic --noinput --clear
 systemctl restart atlas
