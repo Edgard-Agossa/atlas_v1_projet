@@ -8,6 +8,7 @@ set -e  # Arrêter si une commande échoue
 PROJECT_DIR="/var/www/atlas_v1_projet"
 BACKEND_DIR="$PROJECT_DIR/atlas_backend"
 FRONTEND_DIR="$PROJECT_DIR/Atlas-V1.0"
+VENV_DIR="$PROJECT_DIR/venv"
 
 echo "🚀 Déploiement Atlas en cours..."
 
@@ -19,7 +20,7 @@ git pull origin winner_kiro
 # ── 2. Backend Django ─────────────────────────────────────────────────────────
 echo "🐍 Mise à jour du backend..."
 cd $BACKEND_DIR
-source venv/bin/activate
+source $VENV_DIR/bin/activate
 pip install -r requirements.txt --quiet
 python3 manage.py migrate --noinput
 python3 manage.py collectstatic --noinput --clear
