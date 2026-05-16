@@ -92,7 +92,7 @@ const EditMemberAccountModal: React.FC<EditMemberAccountModalProps> = ({
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `http://127.0.0.1:8000/api/investment/admin/accounts/${account?.id}/update/`,
+        `${process.env.REACT_APP_API_URL}/investment/admin/accounts/${account?.id}/update/`,
         {
           method: 'PATCH',
           headers: {

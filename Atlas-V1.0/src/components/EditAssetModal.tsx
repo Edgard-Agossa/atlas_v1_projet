@@ -76,7 +76,7 @@ const EditAssetModal: React.FC<EditAssetModalProps> = ({
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `http://127.0.0.1:8000/api/investment/snapshots/${snapshotId}/rows/${asset?.id}/update/`,
+        `${process.env.REACT_APP_API_URL}/investment/snapshots/${snapshotId}/rows/${asset?.id}/update/`,
         {
           method: 'PATCH',
           headers: {
