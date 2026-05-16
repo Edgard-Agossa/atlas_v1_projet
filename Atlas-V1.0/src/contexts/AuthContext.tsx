@@ -17,9 +17,11 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  requiresPasswordChange: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; requiresPasswordChange?: boolean }>;
   register: (userData: RegisterData) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  clearPasswordChangeFlag: () => void;
 }
 
 interface RegisterData {
@@ -63,14 +65,18 @@ const mapUser = (data: any): User => ({
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [requiresPasswordChange, setRequiresPasswordChange] = useState(false);
 
   // Restaurer la session au chargement
   useEffect(() => {
     const savedUser = localStorage.getItem('phronesis_user');
     const savedToken = localStorage.getItem('token');
+    const savedPasswordChangeFlag = localStorage.getItem('requires_password_change');
+    
     if (savedUser && savedToken) {
       try {
         setUser(JSON.parse(savedUser));
+        setRequiresPasswordChange(savedPasswordChangeFlag === 'true');
       } catch {
         clearSession();
       }
@@ -91,7 +97,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (
     email: string,
     password: string
-  ): Promise<{ success: boolean; error?: string }> => {
+  ): Promise<{ success: boolean; error?: string; requiresPasswordChange?: boolean }> => {
     setIsLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login/`, {
@@ -106,8 +112,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const userData = mapUser(data.user);
         setUser(userData);
         saveSession(userData, data.access_token, data.refresh_token);
+        
+        // Gérer le flag de changement de mot de passe
+        const needsPasswordChange = data.requires_password_change || false;
+        setRequiresPasswordChange(needsPasswordChange);
+        localStorage.setItem('requires_password_change', needsPasswordChange.toString());
+        
         setIsLoading(false);
-        return { success: true };
+        return { success: true, requiresPasswordChange: needsPasswordChange };
       }
 
       setIsLoading(false);
@@ -164,12 +176,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = () => {
     setUser(null);
+    setRequiresPasswordChange(false);
     clearSession();
+    localStorage.removeItem('requires_password_change');
+  };
+
+  const clearPasswordChangeFlag = () => {
+    setRequiresPasswordChange(false);
+    localStorage.removeItem('requires_password_change');
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated: !!user, isLoading, login, register, logout }}
+      value={{ 
+        user, 
+        isAuthenticated: !!user, 
+        isLoading, 
+        requiresPasswordChange,
+        login, 
+        register, 
+        logout,
+        clearPasswordChangeFlag
+      }}
     >
       {children}
     </AuthContext.Provider>

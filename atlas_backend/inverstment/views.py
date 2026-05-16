@@ -783,3 +783,294 @@ class MemberInvestmentsView(APIView):
         except Exception as e:
             print(f"ERROR: {e}")
             return Response({'success': False, 'error': str(e)}, status=500)
+
+
+class AllMemberAccountsView(APIView):
+    """Admin — récupère tous les comptes membres avec détails complets."""
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        """Vérifier le code PIN avant d'accéder aux comptes."""
+        try:
+            # Vérifier que l'utilisateur est admin
+            if not request.user.role or request.user.role.name != 'admin':
+                return Response({
+                    'success': False,
+                    'error': 'Accès réservé aux administrateurs'
+                }, status=status.HTTP_403_FORBIDDEN)
+            
+            # Vérifier le code PIN
+            from decouple import config
+            pin_code = request.data.get('pin_code')
+            correct_pin = config('ADMIN_ACCOUNTS_PIN', default='2024')
+            
+            if not pin_code or str(pin_code) != str(correct_pin):
+                return Response({
+                    'success': False,
+                    'error': 'Code PIN incorrect'
+                }, status=status.HTTP_401_UNAUTHORIZED)
+            
+            from .models import Compte_member
+            
+            # Récupérer tous les comptes
+            comptes = Compte_member.objects.all().select_related('portfolio', 'member', 'last_modified_by').order_by('-created_at')
+            
+            data = []
+            for compte in comptes:
+                data.append({
+                    'id': compte.id,
+                    'account_number': compte.account_number,
+                    'member_external_id': compte.member_external_id or '',
+                    'member_id': compte.member.id,
+                    'member_name': f"{compte.member.first_name} {compte.member.last_name}",
+                    'email': compte.member.email,
+                    'telephone': compte.member.phone or '',
+                    'date_entree': compte.date_entree.strftime('%Y-%m-%d') if compte.date_entree else '',
+                    'balance': float(compte.balance),
+                    'shares_count': float(compte.shares_count),
+                    'gross_value': float(compte.gross_value),
+                    'promesse_annuelle': float(compte.promesse_annuelle) if compte.promesse_annuelle else 0,
+                    'frais_gestion': float(compte.frais_gestion) if compte.frais_gestion else 0,
+                    'capital_net': float(compte.capital_net) if compte.capital_net else 0,
+                    'parts_pct': float(compte.parts_pct) if compte.parts_pct else 0,
+                    'profit_type': compte.profit_type or '',
+                    'portfolio_type': compte.portfolio.type,
+                    'portfolio_name': compte.portfolio.name,
+                    'is_active': compte.is_active,
+                    'created_at': compte.created_at.strftime('%Y-%m-%d %H:%M'),
+                    'updated_at': compte.updated_at.strftime('%Y-%m-%d %H:%M'),
+                    'last_modified_by': f"{compte.last_modified_by.first_name} {compte.last_modified_by.last_name}" if compte.last_modified_by else None,
+                    'last_modification_date': compte.last_modification_date.strftime('%Y-%m-%d %H:%M') if compte.last_modification_date else None,
+                })
+            
+            return Response({
+                'success': True,
+                'accounts': data,
+                'total': len(data)
+            })
+            
+        except Exception as e:
+            import traceback
+            print(f"ERROR AllMemberAccountsView: {traceback.format_exc()}")
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class BulkUpdateMemberAccountView(APIView):
+    """Admin — met à jour un compte membre avec tous les champs."""
+    permission_classes = [IsAuthenticated]
+    
+    def patch(self, request, compte_id):
+        try:
+            # Vérifier que l'utilisateur est admin
+            if not request.user.role or request.user.role.name != 'admin':
+                return Response({
+                    'success': False,
+                    'error': 'Accès réservé aux administrateurs'
+                }, status=status.HTTP_403_FORBIDDEN)
+            
+            # Vérifier le mot de passe de l'admin
+            password = request.data.get('admin_password')
+            if not password:
+                return Response({
+                    'success': False,
+                    'error': 'Mot de passe requis pour valider la modification'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Vérifier le mot de passe
+            if not request.user.check_password(password):
+                return Response({
+                    'success': False,
+                    'error': 'Mot de passe incorrect'
+                }, status=status.HTTP_401_UNAUTHORIZED)
+            
+            from .models import Compte_member
+            from decimal import Decimal
+            from django.utils import timezone
+            
+            # Récupérer le compte
+            compte = Compte_member.objects.get(id=compte_id)
+            
+            data = request.data
+            
+            # Mettre à jour tous les champs modifiables
+            if 'member_external_id' in data:
+                compte.member_external_id = data['member_external_id']
+            
+            if 'balance' in data:
+                compte.balance = Decimal(str(data['balance']))
+            
+            if 'shares_count' in data:
+                compte.shares_count = Decimal(str(data['shares_count']))
+            
+            if 'gross_value' in data:
+                compte.gross_value = Decimal(str(data['gross_value']))
+            
+            if 'promesse_annuelle' in data:
+                compte.promesse_annuelle = Decimal(str(data['promesse_annuelle'])) if data['promesse_annuelle'] else None
+            
+            if 'frais_gestion' in data:
+                compte.frais_gestion = Decimal(str(data['frais_gestion'])) if data['frais_gestion'] else None
+            
+            if 'capital_net' in data:
+                compte.capital_net = Decimal(str(data['capital_net'])) if data['capital_net'] else None
+            
+            if 'parts_pct' in data:
+                compte.parts_pct = Decimal(str(data['parts_pct'])) if data['parts_pct'] else None
+            
+            if 'profit_type' in data:
+                compte.profit_type = data['profit_type'] or None
+            
+            if 'is_active' in data:
+                compte.is_active = bool(data['is_active'])
+            
+            if 'date_entree' in data and data['date_entree']:
+                from datetime import datetime
+                compte.date_entree = datetime.strptime(data['date_entree'], '%Y-%m-%d').date()
+            
+            # Enregistrer l'audit trail
+            compte.last_modified_by = request.user
+            compte.last_modification_date = timezone.now()
+            
+            compte.save()
+            
+            return Response({
+                'success': True,
+                'message': 'Compte mis à jour avec succès',
+                'account': {
+                    'id': compte.id,
+                    'account_number': compte.account_number,
+                    'member_external_id': compte.member_external_id or '',
+                    'balance': float(compte.balance),
+                    'shares_count': float(compte.shares_count),
+                    'gross_value': float(compte.gross_value),
+                    'promesse_annuelle': float(compte.promesse_annuelle) if compte.promesse_annuelle else 0,
+                    'frais_gestion': float(compte.frais_gestion) if compte.frais_gestion else 0,
+                    'capital_net': float(compte.capital_net) if compte.capital_net else 0,
+                    'parts_pct': float(compte.parts_pct) if compte.parts_pct else 0,
+                    'profit_type': compte.profit_type or '',
+                    'is_active': compte.is_active,
+                    'last_modified_by': f"{request.user.first_name} {request.user.last_name}",
+                    'last_modification_date': compte.last_modification_date.strftime('%Y-%m-%d %H:%M'),
+                }
+            })
+            
+        except Compte_member.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'Compte introuvable'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            import traceback
+            print(f"ERROR BulkUpdateMemberAccountView: {traceback.format_exc()}")
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class UpdateSnapshotRowView(APIView):
+    """Admin — met à jour une ligne d'actif dans un snapshot."""
+    permission_classes = [IsAuthenticated]
+    
+    def patch(self, request, snapshot_id, row_id):
+        try:
+            # Vérifier que l'utilisateur est admin
+            if not request.user.role or request.user.role.name != 'admin':
+                return Response({
+                    'success': False,
+                    'error': 'Accès réservé aux administrateurs'
+                }, status=status.HTTP_403_FORBIDDEN)
+            
+            # Vérifier le mot de passe de l'admin
+            password = request.data.get('admin_password')
+            if not password:
+                return Response({
+                    'success': False,
+                    'error': 'Mot de passe requis pour valider la modification'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Vérifier le mot de passe
+            if not request.user.check_password(password):
+                return Response({
+                    'success': False,
+                    'error': 'Mot de passe incorrect'
+                }, status=status.HTTP_401_UNAUTHORIZED)
+            
+            from .models import PortfolioSnapshotRow
+            from decimal import Decimal
+            
+            # Récupérer la ligne
+            row = PortfolioSnapshotRow.objects.get(id=row_id, snapshot_id=snapshot_id)
+            
+            data = request.data
+            
+            # Mettre à jour tous les champs modifiables
+            if 'actif' in data:
+                row.actif = data['actif']
+            
+            if 'poids' in data:
+                row.poids = Decimal(str(data['poids']))
+            
+            if 'quantite' in data:
+                row.quantite = Decimal(str(data['quantite']))
+            
+            if 'cours_achat' in data:
+                row.cours_achat = Decimal(str(data['cours_achat']))
+            
+            if 'cours_cloture' in data:
+                row.cours_cloture = Decimal(str(data['cours_cloture']))
+            
+            if 'dividende' in data:
+                row.dividende = Decimal(str(data['dividende']))
+            
+            if 'rendement_brut' in data:
+                row.rendement_brut = Decimal(str(data['rendement_brut']))
+            
+            if 'investissement' in data:
+                row.investissement = Decimal(str(data['investissement']))
+            
+            if 'valorisation' in data:
+                row.valorisation = Decimal(str(data['valorisation']))
+            
+            if 'rendement_annuel' in data:
+                row.rendement_annuel = Decimal(str(data['rendement_annuel']))
+            
+            if 'variation_semaine' in data:
+                row.variation_semaine = Decimal(str(data['variation_semaine']))
+            
+            row.save()
+            
+            return Response({
+                'success': True,
+                'message': 'Actif mis à jour avec succès',
+                'row': {
+                    'id': row.id,
+                    'actif': row.actif,
+                    'poids': str(row.poids),
+                    'quantite': str(row.quantite),
+                    'cours_achat': str(row.cours_achat),
+                    'cours_cloture': str(row.cours_cloture),
+                    'dividende': str(row.dividende),
+                    'rendement_brut': str(row.rendement_brut),
+                    'investissement': str(row.investissement),
+                    'valorisation': str(row.valorisation),
+                    'rendement_annuel': str(row.rendement_annuel),
+                    'variation_semaine': str(row.variation_semaine),
+                }
+            })
+            
+        except PortfolioSnapshotRow.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'Actif introuvable'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            import traceback
+            print(f"ERROR UpdateSnapshotRowView: {traceback.format_exc()}")
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

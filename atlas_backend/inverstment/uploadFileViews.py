@@ -125,23 +125,42 @@ def handle_membres(df, uploaded_by):
                 created_by=uploaded_by
             )
 
-        # Compte membre
-        compte, acc_created = Compte_member.objects.update_or_create(
-            member=user,
-            portfolio=portfolio_obj,
-            defaults={
-                'member_external_id': external_id,
-                'balance':           _dec(row.get('Montant versé') or row.get('Montant verse')),
-                'shares_count':      _dec(row.get('Nbre de part') or row.get('Nbre de parts')),
-                'gross_value':       _dec(row.get('Valeur nette') or row.get('Valeur Nette') or row.get('Valeur Brute')),
-                'promesse_annuelle': _dec(row.get('Promesse Annuelle') or row.get('Promesse annuelle')),
-                'frais_gestion':     _dec(row.get('Frais de gestion') or row.get('Frais gestion')),
-                'capital_net':       _dec(row.get('Capital investi (solde frais de gestion déduits)') or row.get('Capital investi')),
-                'parts_pct':         _dec(row.get("Parts détenues (%)") or row.get('Parts detenues (%)')),
-                'profit_type':       _str(row, 'Profit Type', 'profit_type') or None,
-                'is_active':         _str(row, 'Statut Portfolio', 'Statut', 'Status') == 'Actif',
-            }
-        )
+        # Compte membre - Chercher d'abord par member_external_id pour éviter les doublons
+        try:
+            # Essayer de trouver un compte existant avec cet external_id
+            compte = Compte_member.objects.get(member_external_id=external_id)
+            # Mettre à jour les données
+            compte.member = user
+            compte.portfolio = portfolio_obj
+            compte.balance = _dec(row.get('Montant versé') or row.get('Montant verse'))
+            compte.shares_count = _dec(row.get('Nbre de part') or row.get('Nbre de parts'))
+            compte.gross_value = _dec(row.get('Valeur nette') or row.get('Valeur Nette') or row.get('Valeur Brute'))
+            compte.promesse_annuelle = _dec(row.get('Promesse Annuelle') or row.get('Promesse annuelle'))
+            compte.frais_gestion = _dec(row.get('Frais de gestion') or row.get('Frais gestion'))
+            compte.capital_net = _dec(row.get('Capital investi (solde frais de gestion déduits)') or row.get('Capital investi'))
+            compte.parts_pct = _dec(row.get("Parts détenues (%)") or row.get('Parts detenues (%)'))
+            compte.profit_type = _str(row, 'Profit Type', 'profit_type') or None
+            compte.is_active = _str(row, 'Statut Portfolio', 'Statut', 'Status') == 'Actif'
+            compte.save()
+            acc_created = False
+        except Compte_member.DoesNotExist:
+            # Le compte n'existe pas, le créer
+            compte, acc_created = Compte_member.objects.get_or_create(
+                member=user,
+                portfolio=portfolio_obj,
+                defaults={
+                    'member_external_id': external_id,
+                    'balance':           _dec(row.get('Montant versé') or row.get('Montant verse')),
+                    'shares_count':      _dec(row.get('Nbre de part') or row.get('Nbre de parts')),
+                    'gross_value':       _dec(row.get('Valeur nette') or row.get('Valeur Nette') or row.get('Valeur Brute')),
+                    'promesse_annuelle': _dec(row.get('Promesse Annuelle') or row.get('Promesse annuelle')),
+                    'frais_gestion':     _dec(row.get('Frais de gestion') or row.get('Frais gestion')),
+                    'capital_net':       _dec(row.get('Capital investi (solde frais de gestion déduits)') or row.get('Capital investi')),
+                    'parts_pct':         _dec(row.get("Parts détenues (%)") or row.get('Parts detenues (%)')),
+                    'profit_type':       _str(row, 'Profit Type', 'profit_type') or None,
+                    'is_active':         _str(row, 'Statut Portfolio', 'Statut', 'Status') == 'Actif',
+                }
+            )
 
         # Date d'entrée
         d = _date(row.get("Date d'entrée") or row.get('Date entree') or row.get('Date'))

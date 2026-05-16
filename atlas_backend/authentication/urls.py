@@ -8,6 +8,7 @@ urlpatterns = [
     path('login/', views.LoginView.as_view(), name='login'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
     path('profile/', views.ProfileView.as_view(), name='profile'),
+    path('change-password/', views.ChangePasswordView.as_view(), name='change-password'),
     path('users/', views.UserListView.as_view(), name='user-list'),
     path('users/<int:user_id>/', views.UserDetailView.as_view(), name='user-detail'),
     # Gestion des rôles

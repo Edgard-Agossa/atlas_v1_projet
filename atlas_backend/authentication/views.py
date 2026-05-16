@@ -98,10 +98,14 @@ class LoginView(APIView):
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
 
+            # Vérifier si l'utilisateur utilise le mot de passe par défaut
+            requires_password_change = user.check_password('Defaut@123')
+
             return Response({
                 'message': 'Connexion réussie',
                 'access_token': access_token,
                 'refresh_token': str(refresh),
+                'requires_password_change': requires_password_change,
                 'user': {
                     'id': user.id,
                     'first_name': user.first_name,
@@ -200,6 +204,55 @@ class UserListView(APIView):
             'users': user_data,
             'total': len(user_data)
         })
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        data = request.data
+
+        # Validation des champs
+        if 'new_password' not in data or 'confirm_password' not in data:
+            return Response({
+                'error': 'Nouveau mot de passe et confirmation requis'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        new_password = data['new_password']
+        confirm_password = data['confirm_password']
+
+        # Vérifier que les mots de passe correspondent
+        if new_password != confirm_password:
+            return Response({
+                'error': 'Les mots de passe ne correspondent pas'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Vérifier la longueur minimale
+        if len(new_password) < 6:
+            return Response({
+                'error': 'Le mot de passe doit contenir au moins 6 caractères'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Vérifier que le nouveau mot de passe n'est pas le mot de passe par défaut
+        if new_password == 'Defaut@123':
+            return Response({
+                'error': 'Vous ne pouvez pas utiliser le mot de passe par défaut'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Changer le mot de passe
+            user.set_password(new_password)
+            user.save()
+
+            return Response({
+                'message': 'Mot de passe changé avec succès'
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({
+                'error': f'Erreur lors du changement de mot de passe: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class UserDetailView(APIView):
     permission_classes = [IsAuthenticated]

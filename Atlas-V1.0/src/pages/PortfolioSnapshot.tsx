@@ -4,11 +4,12 @@ import {
   TableProperties, Upload, RefreshCw, TrendingUp, TrendingDown,
   DollarSign, BarChart3, ChevronDown, ChevronUp, X, FileText,
   Calendar, User, Eye, Trash2, AlertCircle, CheckCircle,
-  ArrowUpRight, ArrowDownRight, Minus, Search, Filter,
+  ArrowUpRight, ArrowDownRight, Minus, Search, Filter, Edit,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import API_BASE_URL from '../config/api';
 import { apiFetch } from '../utils/apiFetch';
+import EditAssetModal from '../components/EditAssetModal';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -289,13 +290,31 @@ const SnapshotDetailPanel: React.FC<{
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<keyof SnapshotRow>('actif');
   const [sortAsc, setSortAsc] = useState(true);
+  const [selectedAsset, setSelectedAsset] = useState<SnapshotRow | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
-  useEffect(() => {
+  const fetchDetail = () => {
+    setLoading(true);
     apiFetch(`${API_BASE_URL}/investment/snapshots/${snapshotId}/`)
       .then(r => r.json())
       .then(setDetail)
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchDetail();
   }, [snapshotId]);
+
+  const handleEditAsset = (asset: SnapshotRow) => {
+    setSelectedAsset(asset);
+    setShowEditModal(true);
+  };
+
+  const handleEditSuccess = () => {
+    fetchDetail();
+    setShowEditModal(false);
+    setSelectedAsset(null);
+  };
 
   const toggleSort = (key: keyof SnapshotRow) => {
     if (sortKey === key) setSortAsc(a => !a);
@@ -483,6 +502,11 @@ const SnapshotDetailPanel: React.FC<{
                             </div>
                           </th>
                         ))}
+                        {isAdmin && (
+                          <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        )}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -514,6 +538,18 @@ const SnapshotDetailPanel: React.FC<{
                           <td className="px-4 py-3 text-right font-semibold text-gray-900 dark:text-white">{fmt(row.valorisation)}</td>
                           <td className="px-4 py-3 text-center"><RendementBadge value={row.rendement_annuel} /></td>
                           <td className="px-4 py-3 text-center"><VariationBadge value={row.variation_semaine} /></td>
+                          {isAdmin && (
+                            <td className="px-4 py-3 text-center">
+                              <button
+                                onClick={() => handleEditAsset(row)}
+                                className="inline-flex items-center px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors"
+                                title="Modifier cet actif"
+                              >
+                                <Edit className="w-3 h-3 mr-1" />
+                                Modifier
+                              </button>
+                            </td>
+                          )}
                         </motion.tr>
                       ))}
                     </tbody>
@@ -541,6 +577,22 @@ const SnapshotDetailPanel: React.FC<{
           </div>
         ) : null}
       </div>
+
+      {/* Modal d'édition d'actif */}
+      <AnimatePresence>
+        {showEditModal && selectedAsset && (
+          <EditAssetModal
+            isOpen={showEditModal}
+            onClose={() => {
+              setShowEditModal(false);
+              setSelectedAsset(null);
+            }}
+            asset={selectedAsset}
+            snapshotId={snapshotId}
+            onSuccess={handleEditSuccess}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

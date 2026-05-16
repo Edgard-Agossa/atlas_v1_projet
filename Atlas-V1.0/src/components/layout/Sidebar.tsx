@@ -28,7 +28,8 @@ const navigation = [
   { name: 'Portfolio',      href: '/portfolio',     icon: Briefcase },
   { name: 'Transactions',   href: '/transactions',  icon: ArrowUpDown },
   { name: 'Members',        href: '/members',       icon: Users },
-  { name: 'Admin Users',    href: '/admin/users',   icon: Shield },
+  { name: 'Admin Users',    href: '/admin/users',   icon: Shield, adminOnly: true },
+  { name: 'Gestion Comptes', href: '/admin/accounts', icon: Wallet, adminOnly: true },
   { name: 'Paramètres',     href: '/settings',      icon: Settings },
   // ── Pages en cours de développement ──────────────────────────────────
   // { name: 'Analytics',    href: '/analytics',    icon: BarChart3 },
@@ -58,7 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(amount) + ' CFA';
   // Filtrer la navigation selon le rôle de l'utilisateur
   const filteredNavigation = navigation.filter(item => {
-    if (item.name === 'Admin Users' && user?.role !== 'admin') {
+    if (item.adminOnly && user?.role !== 'admin') {
       return false;
     }
     return true;

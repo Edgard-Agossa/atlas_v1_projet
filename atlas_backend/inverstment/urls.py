@@ -7,6 +7,7 @@ from .snapshot_views import (
     PortfolioSnapshotListView,
     PortfolioSnapshotDetailView,
 )
+from .views import UpdateSnapshotRowView
 
 urlpatterns = [
     path('transactions/', views.TransactionListCreateView.as_view(), name='transaction-list'),
@@ -39,6 +40,10 @@ urlpatterns = [
 
     # Investissements membres
     path('member/investments/', views.MemberInvestmentsView.as_view(), name='member-investments'),
+    
+    # Admin - Tous les comptes membres
+    path('admin/accounts/all/', views.AllMemberAccountsView.as_view(), name='admin-all-accounts'),
+    path('admin/accounts/<int:compte_id>/update/', views.BulkUpdateMemberAccountView.as_view(), name='admin-update-account'),
 
     # Upload Excel membres
     path('upload-assets/', AssetUploadView.as_view(), name='upload-assets'),
@@ -53,4 +58,5 @@ urlpatterns = [
     path('snapshots/', PortfolioSnapshotListView.as_view(), name='snapshot-list'),
     path('snapshots/upload/', PortfolioSnapshotUploadView.as_view(), name='snapshot-upload'),
     path('snapshots/<int:snapshot_id>/', PortfolioSnapshotDetailView.as_view(), name='snapshot-detail'),
+    path('snapshots/<int:snapshot_id>/rows/<int:row_id>/update/', UpdateSnapshotRowView.as_view(), name='snapshot-row-update'),
 ]

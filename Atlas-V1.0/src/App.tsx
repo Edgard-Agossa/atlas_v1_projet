@@ -23,7 +23,9 @@ import MyReport from './pages/MyReport';
 import Allocation from './pages/Allocation';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ChangePassword from './pages/ChangePassword';
 import AdminUsersPro from './pages/AdminUsersPro';
+import AdminMemberAccounts from './pages/AdminMemberAccounts';
 import PortfolioSnapshot from './pages/PortfolioSnapshot';
 import MarketTicker from './components/MarketTicker';
 import { useClubData } from './hooks/useClubData';
@@ -62,6 +64,11 @@ const AppContent: React.FC = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/change-password" element={
+          <ProtectedRoute>
+            <ChangePassword />
+          </ProtectedRoute>
+        } />
         <Route path="/*" element={
           <ProtectedRoute>
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -98,6 +105,11 @@ const AppContent: React.FC = () => {
                       <Route path="/admin/users" element={
                         <ProtectedRoute adminOnly={true}>
                           <AdminUsersPro />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/admin/accounts" element={
+                        <ProtectedRoute adminOnly={true}>
+                          <AdminMemberAccounts />
                         </ProtectedRoute>
                       } />
                     </Routes>

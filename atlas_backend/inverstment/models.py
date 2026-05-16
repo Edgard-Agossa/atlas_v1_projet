@@ -109,6 +109,10 @@ class Compte_member(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # Audit trail - Qui a modifié et quand
+    last_modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='modified_accounts')
+    last_modification_date = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         unique_together = ['member', 'portfolio']

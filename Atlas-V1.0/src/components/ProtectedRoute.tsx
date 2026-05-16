@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, adminOnly = false }) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading, user, requiresPasswordChange } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -24,6 +24,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, adminOnly = f
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Rediriger vers la page de changement de mot de passe si nécessaire
+  // Sauf si on est déjà sur cette page
+  if (requiresPasswordChange && location.pathname !== '/change-password') {
+    return <Navigate to="/change-password" replace />;
   }
 
   if (adminOnly && user?.role !== 'admin') {

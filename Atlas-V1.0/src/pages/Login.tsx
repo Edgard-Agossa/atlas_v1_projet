@@ -42,7 +42,12 @@ const Login: React.FC = () => {
       try {
         const result = await login(email, password);
         if (result.success) {
-          navigate(from, { replace: true });
+          // Vérifier si l'utilisateur doit changer son mot de passe
+          if (result.requiresPasswordChange) {
+            navigate('/change-password', { replace: true });
+          } else {
+            navigate(from, { replace: true });
+          }
         } else {
           setError(result.error || 'Email ou mot de passe incorrect');
         }
