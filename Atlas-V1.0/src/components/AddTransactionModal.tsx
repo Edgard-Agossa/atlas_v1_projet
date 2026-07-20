@@ -25,7 +25,6 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 
   const handleSubmit = () => {
     // Add transaction logic here
-    console.log('Adding transaction:', formData);
     onSuccess();
     onClose();
   };

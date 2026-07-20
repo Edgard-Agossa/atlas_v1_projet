@@ -184,5 +184,6 @@ FEDAPAY_CONFIG = {
 }
 
 BASE_URL = config('BASE_URL', default='http://127.0.0.1:8000')
-ALLOWED_HOSTS = ['204.168.153.21']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+# ALLOWED_HOSTS = ['204.168.153.21']
 STATIC_ROOT = BASE_DIR / 'staticfiles'

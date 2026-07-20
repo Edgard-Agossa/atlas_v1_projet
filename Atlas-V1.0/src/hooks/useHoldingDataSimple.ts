@@ -36,7 +36,6 @@ export const useHoldingDataSimple = () => {
       }
 
       const data = await response.json();
-      console.log('Holdings reçus:', data);
       // S'assurer que data est un tableau
       const holdingsArray = Array.isArray(data) ? data : (data.results || []);
       setHoldings(holdingsArray);
@@ -51,15 +50,12 @@ export const useHoldingDataSimple = () => {
 
   const createHolding = async (holdingData: Omit<HoldingData, 'id' | 'last_updated'>) => {
     const token = localStorage.getItem('token');
-    console.log('🔑 Token:', token ? 'Présent' : 'Manquant');
     
     if (!token) {
       throw new Error('Token d\'authentification manquant. Veuillez vous reconnecter.');
     }
     
     try {
-      console.log('📤 Création holding:', holdingData);
-      
       const response = await fetch(`${API_BASE_URL}/investment/holdings/`, {
         method: 'POST',
         headers: {
@@ -68,9 +64,6 @@ export const useHoldingDataSimple = () => {
         },
         body: JSON.stringify(holdingData),
       });
-
-      console.log('📥 Response status:', response.status);
-      console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -118,7 +111,6 @@ export const useHoldingDataSimple = () => {
       }
 
       const newHolding = await response.json();
-      console.log('✅ Holding créé:', newHolding);
       
       await fetchHoldings(); // Actualiser la liste
       return newHolding;
@@ -135,8 +127,6 @@ export const useHoldingDataSimple = () => {
   const updateHolding = async (id: number, holdingData: Partial<HoldingData>) => {
     const token = localStorage.getItem('token');
     try {
-      console.log('Mise à jour holding:', id, holdingData);
-      
       const response = await fetch(`${API_BASE_URL}/investment/holdings/${id}/`, {
         method: 'PATCH',
         headers: {
@@ -153,7 +143,6 @@ export const useHoldingDataSimple = () => {
       }
 
       const updatedHolding = await response.json();
-      console.log('Holding mis à jour:', updatedHolding);
       
       await fetchHoldings(); // Actualiser la liste
       return updatedHolding;
@@ -166,8 +155,6 @@ export const useHoldingDataSimple = () => {
   const deleteHolding = async (id: number) => {
     const token = localStorage.getItem('token');
     try {
-      console.log('Suppression holding:', id);
-      
       const response = await fetch(`${API_BASE_URL}/investment/holdings/${id}/`, {
         method: 'DELETE',
         headers: {
@@ -181,7 +168,6 @@ export const useHoldingDataSimple = () => {
         throw new Error(`Erreur ${response.status}: ${errorText}`);
       }
 
-      console.log('Holding supprimé');
       await fetchHoldings(); // Actualiser la liste
     } catch (err) {
       console.error('Erreur suppression:', err);

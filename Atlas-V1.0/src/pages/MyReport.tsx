@@ -5,7 +5,7 @@ const MyReport: React.FC = () => {
   const [email, setEmail] = useState('');
 
   const handleGenerateReport = () => {
-    console.log('Generating report for:', { memberId, email });
+    // TODO: Implement report generation
   };
 
   return (

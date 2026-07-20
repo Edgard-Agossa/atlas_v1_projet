@@ -57,7 +57,7 @@ const Settings: React.FC = () => {
 
   const handleSave = () => {
     // Simulate save action
-    console.log('Saving settings:', formData);
+    // TODO: Implement save settings
   };
 
   const tabs = [

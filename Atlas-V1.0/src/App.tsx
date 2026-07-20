@@ -28,10 +28,12 @@ import AdminUsersPro from './pages/AdminUsersPro';
 import AdminMemberAccounts from './pages/AdminMemberAccounts';
 import PortfolioSnapshot from './pages/PortfolioSnapshot';
 import MarketTicker from './components/MarketTicker';
+import InactivityModal from './components/InactivityModal';
 import { useClubData } from './hooks/useClubData';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useAppStore } from './store/useAppStore';
+import { useInactivityDetector } from './hooks/useInactivityDetector';
 
 const AppContent: React.FC = () => {
   // Fermée par défaut sur mobile, ouverte sur desktop
@@ -48,9 +50,28 @@ const AppContent: React.FC = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+  
   const clubData = useClubData();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const refreshAll = useAppStore((s) => s.refreshAll);
+
+  // 🔒 Détecteur d'inactivité avec modal de confirmation
+  const {
+    showWarning,
+    timeLeft,
+    handleStayConnected,
+  } = useInactivityDetector({
+    inactivityTimeout: 5 * 1000,  // 5 minutes d'inactivité
+    warningDuration: 20 * 1000,         // 20 secondes pour répondre
+    onLogout: logout,
+    enabled: isAuthenticated,
+  });
+
+  // Rafraîchir toutes les données quand l'utilisateur continue sa session
+  const handleContinueSession = React.useCallback(() => {
+    handleStayConnected();
+    refreshAll(); // Rafraîchir les données
+  }, [handleStayConnected, refreshAll]);
 
   // Charge toutes les données dès que l'utilisateur est connecté
   React.useEffect(() => {
@@ -61,6 +82,13 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* 🔔 Modal d'inactivité */}
+      <InactivityModal
+        isOpen={showWarning}
+        onStayConnected={handleContinueSession}
+        timeLeft={timeLeft}
+      />
+
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

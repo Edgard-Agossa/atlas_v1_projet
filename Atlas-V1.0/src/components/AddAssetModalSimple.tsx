@@ -33,8 +33,6 @@ const AddAssetModalSimple: React.FC<AddAssetModalSimpleProps> = ({ onClose, onAd
     setIsSubmitting(true);
     
     try {
-      console.log('📤 Envoi des données depuis le modal:', formData);
-      
       // Préparer les données avec conversion des nombres
       const submitData = {
         ...formData,
@@ -60,7 +58,6 @@ const AddAssetModalSimple: React.FC<AddAssetModalSimpleProps> = ({ onClose, onAd
       }
       
       await onAddAsset(submitData);
-      console.log('✅ Actif ajouté avec succès');
       onClose();
     } catch (error) {
       console.error('❌ Erreur lors de l\'ajout:', error);

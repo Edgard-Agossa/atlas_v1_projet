@@ -13,17 +13,16 @@ interface UseInactivityDetectorOptions {
  */
 export const useInactivityDetector = ({
   inactivityTimeout = 5 * 60 * 1000,  // 5 minutes par défaut
-  warningDuration = 2 * 60 * 1000,     // 2 minutes par défaut
+  warningDuration = 20 * 1000,         // 20 secondes par défaut
   onLogout,
   enabled = true,
 }: UseInactivityDetectorOptions) => {
   const [showWarning, setShowWarning] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(warningDuration / 1000); // en secondes
+  const [timeLeft, setTimeLeft] = useState(Math.floor(warningDuration / 1000));
 
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const warningTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const lastActivityRef = useRef<number>(Date.now());
 
   // Nettoyer tous les timers
   const clearAllTimers = useCallback(() => {
@@ -41,53 +40,62 @@ export const useInactivityDetector = ({
     }
   }, []);
 
-  // Démarrer le compte à rebours de 2 minutes
+  // Démarrer le compte à rebours du modal
   const startWarning = useCallback(() => {
     setShowWarning(true);
-    setTimeLeft(warningDuration / 1000);
+    const initialSeconds = Math.floor(warningDuration / 1000);
+    setTimeLeft(initialSeconds);
 
-    // Compte à rebours
+    let currentTime = initialSeconds;
+
+    // Compte à rebours chaque seconde
     countdownIntervalRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearAllTimers();
-          onLogout();
-          return 0;
-        }
-        return prev - 1;
-      });
+      currentTime -= 1;
+      setTimeLeft(currentTime);
+
+      if (currentTime <= 0) {
+        clearAllTimers();
+        setShowWarning(false);
+        onLogout();
+      }
     }, 1000);
 
-    // Timer de déconnexion automatique après 2 minutes
+    // Timer de déconnexion automatique (backup)
     warningTimerRef.current = setTimeout(() => {
       clearAllTimers();
+      setShowWarning(false);
       onLogout();
     }, warningDuration);
   }, [warningDuration, onLogout, clearAllTimers]);
 
   // Réinitialiser le timer d'inactivité
   const resetInactivityTimer = useCallback(() => {
-    clearAllTimers();
-    setShowWarning(false);
-    lastActivityRef.current = Date.now();
+    // Nettoyer les anciens timers
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+      inactivityTimerRef.current = null;
+    }
 
     if (!enabled) return;
 
-    // Redémarrer le timer d'inactivité
+    // Démarrer un nouveau timer d'inactivité
     inactivityTimerRef.current = setTimeout(() => {
       startWarning();
     }, inactivityTimeout);
-  }, [inactivityTimeout, enabled, startWarning, clearAllTimers]);
+  }, [inactivityTimeout, enabled, startWarning]);
 
   // L'utilisateur confirme qu'il est toujours là
   const handleStayConnected = useCallback(() => {
+    clearAllTimers();
+    setShowWarning(false);
     resetInactivityTimer();
-  }, [resetInactivityTimer]);
+  }, [clearAllTimers, resetInactivityTimer]);
 
-  // Événements de détection d'activité
+  // Gérer les événements d'activité utilisateur
   useEffect(() => {
     if (!enabled) {
       clearAllTimers();
+      setShowWarning(false);
       return;
     }
 
@@ -100,39 +108,43 @@ export const useInactivityDetector = ({
       'click',
     ];
 
-    // Throttle pour éviter trop d'appels
     let throttleTimeout: NodeJS.Timeout | null = null;
+
     const handleActivity = () => {
-      // Ne pas réinitialiser si le modal est déjà affiché
+      // Ignorer l'activité si le modal est affiché
       if (showWarning) return;
 
+      // Throttle pour éviter trop de resets
       if (!throttleTimeout) {
         throttleTimeout = setTimeout(() => {
           resetInactivityTimer();
           throttleTimeout = null;
-        }, 1000); // Throttle de 1 seconde
+        }, 1000);
       }
     };
 
     // Ajouter les écouteurs d'événements
     events.forEach((event) => {
-      window.addEventListener(event, handleActivity);
+      window.addEventListener(event, handleActivity, { passive: true });
     });
 
-    // Démarrer le timer initial
-    resetInactivityTimer();
+    // Démarrer le timer initial uniquement si le modal n'est pas affiché
+    if (!showWarning) {
+      resetInactivityTimer();
+    }
 
     // Cleanup
     return () => {
       events.forEach((event) => {
         window.removeEventListener(event, handleActivity);
       });
-      if (throttleTimeout) clearTimeout(throttleTimeout);
-      clearAllTimers();
+      if (throttleTimeout) {
+        clearTimeout(throttleTimeout);
+      }
     };
-  }, [enabled, showWarning, resetInactivityTimer, clearAllTimers]);
+  }, [enabled, showWarning, resetInactivityTimer]);
 
-  // Nettoyer au démontage
+  // Nettoyer au démontage du composant
   useEffect(() => {
     return () => {
       clearAllTimers();
@@ -143,6 +155,5 @@ export const useInactivityDetector = ({
     showWarning,
     timeLeft,
     handleStayConnected,
-    handleLogout: onLogout,
   };
 };
