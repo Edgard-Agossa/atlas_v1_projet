@@ -61,7 +61,7 @@ const AppContent: React.FC = () => {
     timeLeft,
     handleStayConnected,
   } = useInactivityDetector({
-    inactivityTimeout: 5 * 1000,  // 5 minutes d'inactivité
+    inactivityTimeout: 10* 60 * 1000,  // 5 minutes d'inactivité
     warningDuration: 20 * 1000,         // 20 secondes pour répondre
     onLogout: logout,
     enabled: isAuthenticated,
